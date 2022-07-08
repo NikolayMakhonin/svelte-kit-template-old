@@ -42,7 +42,7 @@ const config = {
 	// 	},
 	// },
 	build: {
-		minify: false,
+		minify: 'terser',
 		terserOptions: {
 			module: true,
 			ecma: 5,
