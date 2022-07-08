@@ -41,6 +41,19 @@ const config = {
 	// 		// ],
 	// 	},
 	// },
+	build: {
+		minify: false,
+		terserOptions: {
+			module: true,
+			ecma: 5,
+			safari10: true,
+			mangle: false,
+			format: {
+				comments: false,
+				max_line_len: 50,
+			},
+		},
+	},
 	plugins: [
 		// commonjs.default({
 		//
