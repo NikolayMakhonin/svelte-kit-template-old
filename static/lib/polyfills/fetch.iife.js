@@ -23,6 +23,8 @@
 	  return;
   }
 
+  polyfill()
+
   function polyfill() {
     var support = {
       searchParams: 'URLSearchParams' in self,
