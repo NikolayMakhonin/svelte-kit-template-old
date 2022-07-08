@@ -12,35 +12,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('vite').UserConfig} */
 const config = {
-	logLevel: 'info',
-	resolve: {
-		extensions: ['.js', '.cjs', '.mjs', '.ts', '.json'],
-	},
-	build: {
-		// commonjsOptions: {
-		// 	transformMixedEsModules: true,
-		// 	// dynamicRequireTargets: []
-		// },
-		rollupOptions: {
-			// output: {
-			// 	entryFileNames: '[name].mjs',
-			// 	chunkFileNames: '[name].mjs',
-			// },
-			plugins: [
-				babel.default({
-					configFile  : path.resolve(__dirname, '.babelrc.cjs'), // enable babel for node_modules
-					extensions  : ['.ts', '.js', '.cjs', '.mjs', '.svelte', '.html'],
-					babelHelpers: 'runtime',
-					exclude     : [
-						'**/node_modules/rollup*/**',
-						'**/node_modules/@babel/**',
-						'**/node_modules/core-js*/**',
-						'**/.svelte-kit/runtime/server/**'
-					],
-				}),
-			],
-		},
-	},
+	// logLevel: 'info',
+	// resolve: {
+	// 	extensions: ['.js', '.cjs', '.mjs', '.ts', '.json'],
+	// },
+	// build: {
+	// 	// commonjsOptions: {
+	// 	// 	transformMixedEsModules: true,
+	// 	// 	// dynamicRequireTargets: []
+	// 	// },
+	// 	rollupOptions: {
+	// 		// output: {
+	// 		// 	entryFileNames: '[name].mjs',
+	// 		// 	chunkFileNames: '[name].mjs',
+	// 		// },
+	// 		// plugins: [
+	// 		// 	babel.default({
+	// 		// 		configFile  : path.resolve(__dirname, '.babelrc.cjs'), // enable babel for node_modules
+	// 		// 		extensions  : ['.ts', '.js', '.cjs', '.mjs', '.svelte', '.html'],
+	// 		// 		babelHelpers: 'runtime',
+	// 		// 		exclude     : [
+	// 		// 			// '**/node_modules/rollup*/**',
+	// 		// 			'**/node_modules/@babel/**',
+	// 		// 			'**/node_modules/core-js*/**',
+	// 		// 			'**/.svelte-kit/runtime/server/**'
+	// 		// 		],
+	// 		// 	}),
+	// 		// ],
+	// 	},
+	// },
 	plugins: [
 		// commonjs.default({
 		//
@@ -69,6 +69,45 @@ const config = {
 		// 	targets: ['defaults'],
 		// 	// renderLegacyChunks: true,
 		// }),
+		{
+			name: 'vite-plugin-babel',
+			config(config, config_env) {
+				return {
+					build: {
+						// commonjsOptions: {
+						// 	transformMixedEsModules: true,
+						// 	// dynamicRequireTargets: []
+						// },
+						rollupOptions: {
+							// output: {
+							// 	entryFileNames: '[name].mjs',
+							// 	chunkFileNames: '[name].mjs',
+							// },
+							plugins: [
+								babel.default({
+									configFile  : path.resolve(__dirname, '.babelrc.cjs'), // enable babel for node_modules
+									extensions  : ['.ts', '.js', '.cjs', '.mjs', '.svelte', '.html'],
+									babelHelpers: 'runtime',
+									exclude     : [
+										// '**/node_modules/rollup*/**',
+										'**/node_modules/@babel/**',
+										'**/node_modules/core-js*/**',
+										'**/.svelte-kit/runtime/server/**'
+									],
+								}),
+							],
+						},
+					},
+				}
+			}
+		},
+		// {
+		// 	name: 'vite-plugin-print-config',
+		// 	configResolved(config, config_env) {
+		// 		debugger
+		// 		console.log(config)
+		// 	},
+		// }
 	],
 };
 
