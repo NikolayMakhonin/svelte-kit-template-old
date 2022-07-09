@@ -1,3 +1,4 @@
+// import {subscribeUnhandledErrors} from '@flemist/web-logger'
 import { sveltekit } from '@sveltejs/kit/vite';
 import babel from '@rollup/plugin-babel';
 import path from 'path';
@@ -9,6 +10,10 @@ import legacy from '@vitejs/plugin-legacy'
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// subscribeUnhandledErrors({
+// 	catchConsoleLevels: null,
+// })
 
 /** @type {import('vite').UserConfig} */
 const config = {
