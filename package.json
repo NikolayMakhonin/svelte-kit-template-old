@@ -46,13 +46,13 @@
 		"vite-plugin-commonjs": "^0.5.2"
 	},
 	"dependencies": {
-		"@flemist/abort-controller-fast": "^0.0.5",
+		"@flemist/abort-controller-fast": "^0.0.6",
 		"@flemist/nosleep.js": "0.12.1",
 		"@flemist/web-logger": "2.0.0",
 		"eventemitter3": "4.0.7",
 		"firebase": "8.10.1",
 		"firebaseui": "4.8.1",
-		"localforage": "1.9.0",
+		"idb-keyval": "^6.2.0",
 		"text-table": "0.2.0",
 		"ua-parser-js": "0.7.23"
 	}

@@ -10,6 +10,7 @@
   let value = 0
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+
+<p>Main</p>
+<p><a href="/dir/page1">Page1</a></p>
 <button on:click={() => { value++ }}>Value: {value}</button>
