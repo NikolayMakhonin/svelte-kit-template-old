@@ -37,7 +37,7 @@ specifiers:
   tslib: 2.4.0
   typescript: 4.7.4
   ua-parser-js: 0.7.23
-  vite: 2.9.13
+  vite: 2.9.14
   vite-plugin-babel: ^1.1.0
   vite-plugin-commonjs: ^0.5.2
 
@@ -68,11 +68,11 @@ devDependencies:
   '@rollup/plugin-commonjs': 22.0.1
   '@sveltejs/adapter-auto': 1.0.0-next.55
   '@sveltejs/adapter-static': 1.0.0-next.34
-  '@sveltejs/kit': 1.0.0-next.367_svelte@3.48.0+vite@2.9.13
+  '@sveltejs/kit': 1.0.0-next.367_svelte@3.48.0+vite@2.9.14
   '@types/serviceworker': 0.0.48
   '@typescript-eslint/eslint-plugin': 5.30.5_6zdoc3rn4mpiddqwhppni2mnnm
   '@typescript-eslint/parser': 5.30.5_4x5o4skxv6sl53vpwefgt23khm
-  '@vitejs/plugin-legacy': 1.8.2_vite@2.9.13
+  '@vitejs/plugin-legacy': 1.8.2_vite@2.9.14
   eslint: 8.19.0
   eslint-plugin-svelte3: 4.0.0_m4jpobot6gi3xtcba7bv5cflma
   svelte: 3.48.0
@@ -80,8 +80,8 @@ devDependencies:
   svelte-preprocess: 4.10.7_4tykxan3tmubzqb3j5twfif3la
   tslib: 2.4.0
   typescript: 4.7.4
-  vite: 2.9.13
-  vite-plugin-babel: 1.1.0_5oziisliii43bxg7i4foulgxhi
+  vite: 2.9.14
+  vite-plugin-babel: 1.1.0_2rilzf3tcq4l4vzmxce7wc6gqa
   vite-plugin-commonjs: 0.5.2
 
 packages:
@@ -1919,7 +1919,7 @@ packages:
       - supports-color
     dev: true
 
-  /@sveltejs/kit/1.0.0-next.367_svelte@3.48.0+vite@2.9.13:
+  /@sveltejs/kit/1.0.0-next.367_svelte@3.48.0+vite@2.9.14:
     resolution: {integrity: sha512-glilWol6iJEf8esQpH0HOzdI4n/xgZtoLa9U9sbg+BZelQXFRRglaGyw+ahjEreBH5MH3/bpIYAPPObQN8Pgbg==}
     engines: {node: '>=16.9'}
     hasBin: true
@@ -1927,17 +1927,17 @@ packages:
       svelte: ^3.44.0
       vite: ^2.9.10
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.49_svelte@3.48.0+vite@2.9.13
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.49_svelte@3.48.0+vite@2.9.14
       chokidar: 3.5.3
       sade: 1.8.1
       svelte: 3.48.0
-      vite: 2.9.13
+      vite: 2.9.14
     transitivePeerDependencies:
       - diff-match-patch
       - supports-color
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.49_svelte@3.48.0+vite@2.9.13:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.49_svelte@3.48.0+vite@2.9.14:
     resolution: {integrity: sha512-AKh0Ka8EDgidnxWUs8Hh2iZLZovkETkefO99XxZ4sW4WGJ7VFeBx5kH/NIIGlaNHLcrIvK3CK0HkZwC3Cici0A==}
     engines: {node: ^14.13.1 || >= 16}
     peerDependencies:
@@ -1955,7 +1955,7 @@ packages:
       magic-string: 0.26.2
       svelte: 3.48.0
       svelte-hmr: 0.14.12_svelte@3.48.0
-      vite: 2.9.13
+      vite: 2.9.14
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2134,7 +2134,7 @@ packages:
       - supports-color
     dev: true
 
-  /@vitejs/plugin-legacy/1.8.2_vite@2.9.13:
+  /@vitejs/plugin-legacy/1.8.2_vite@2.9.14:
     resolution: {integrity: sha512-NCOKU+pU+cxLMR9P9RTolEuOK+h+zYBXlknj+zGcKSj/NXBZYgA1GAH1FnO4zijoWRiTaiOm2ha9LQrELE7XHg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -2145,7 +2145,7 @@ packages:
       magic-string: 0.26.2
       regenerator-runtime: 0.13.9
       systemjs: 6.12.1
-      vite: 2.9.13
+      vite: 2.9.14
     dev: true
 
   /abbrev/1.1.1:
@@ -4131,14 +4131,14 @@ packages:
     resolution: {integrity: sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==}
     dev: true
 
-  /vite-plugin-babel/1.1.0_5oziisliii43bxg7i4foulgxhi:
+  /vite-plugin-babel/1.1.0_2rilzf3tcq4l4vzmxce7wc6gqa:
     resolution: {integrity: sha512-FncPoFkLHKg1gh64X+Ub1Y/bi7M3M9rS3cINVSvzcaBstMy7yKsxVDD6KurV18hQtV0pYurX9FPRDRHIhNMtlg==}
     peerDependencies:
       '@babel/core': ^7.0.0
       vite: ^2.7.0
     dependencies:
       '@babel/core': 7.18.6
-      vite: 2.9.13
+      vite: 2.9.14
     dev: true
 
   /vite-plugin-commonjs/0.5.2:
@@ -4154,8 +4154,8 @@ packages:
       fast-glob: 3.2.11
     dev: true
 
-  /vite/2.9.13:
-    resolution: {integrity: sha512-AsOBAaT0AD7Mhe8DuK+/kE4aWYFMx/i0ZNi98hJclxb4e0OhQcZYUrvLjIaQ8e59Ui7txcvKMiJC1yftqpQoDw==}
+  /vite/2.9.14:
+    resolution: {integrity: sha512-P/UCjSpSMcE54r4mPak55hWAZPlyfS369svib/gpmz8/01L822lMPOJ/RYW6tLCe1RPvMvOsJ17erf55bKp4Hw==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:

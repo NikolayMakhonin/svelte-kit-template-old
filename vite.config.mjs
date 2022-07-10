@@ -104,7 +104,7 @@ const config = {
 							plugins: [
 								babel.default({
 									configFile  : path.resolve(__dirname, '.babelrc.cjs'), // enable babel for node_modules
-									extensions  : ['.ts', '.js', '.cjs', '.mjs', '.svelte', '.html'],
+									extensions  : ['', '.ts', '.js', '.cjs', '.mjs', '.svelte', '.html'],
 									babelHelpers: 'runtime',
 									exclude     : [
 										// '**/node_modules/rollup*/**',
