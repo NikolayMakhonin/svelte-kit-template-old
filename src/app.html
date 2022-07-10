@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+  <link rel="icon" href="/%sveltekit.assets%/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=2" />
 
   <!-- region unhandled errors -->
@@ -41,6 +41,27 @@
   </script>
 
   <!-- endregion -->
+
+  <script>
+		if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      })
+
+			addEventListener('load', function () {
+				navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
+          if (reg.waiting && reg.waiting.state === 'installed') {
+            reg.waiting.postMessage({ type: 'skipWaiting' })
+          }
+          else {
+            setInterval(function() {
+              reg.update()
+            }, 60 * 60 * 1000)
+          }
+        })
+			})
+		}
+	</script>
 
   <script src="/lib/polyfills/fetch.iife.js"></script>
   <script src="/lib/polyfills/composedpath.polyfill.js"></script>

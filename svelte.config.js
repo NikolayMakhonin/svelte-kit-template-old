@@ -13,6 +13,9 @@ const config = {
 		prerender: {
 			default: true,
 		},
+		serviceWorker: {
+      register: false,
+    },
 	},
 };
 
