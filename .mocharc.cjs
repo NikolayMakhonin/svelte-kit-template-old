@@ -10,5 +10,7 @@ module.exports = {
   ignore       : ['./**/*.d.ts'],
   'node-option': [
     // 'prof',
+    'experimental-specifier-resolution=node',
+    'loader=ts-node/esm',
   ],
 }

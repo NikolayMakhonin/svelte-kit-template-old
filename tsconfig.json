@@ -1,11 +1,7 @@
 {
   "extends": "./.svelte-kit/tsconfig.json",
   "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS",
-      "importsNotUsedAsValues": "remove",
-      "preserveValueImports": false
-    },
+    "esm": true
   },
   "include": [
     "@types/**/*",
