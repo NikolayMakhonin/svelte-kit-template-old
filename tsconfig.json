@@ -1,26 +1,40 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
-	"compilerOptions": {
-		"target": "ES2020",
+  "extends": "./.svelte-kit/tsconfig.json",
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    },
+  },
+  "include": [
+    "@types/**/*",
+  ],
+  "compilerOptions": {
+    "target": "ES2020",
 
-		"allowJs": true,
-		"checkJs": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
-		"sourceMap": true,
+    "allowJs": true,
+    "checkJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
 
-		"declaration": false,
-		"emitDeclarationOnly": true,
-		"allowSyntheticDefaultImports": true,
-		"downlevelIteration": true,
-		"newLine": "LF",
+    "isolatedModules": false,
+    "declaration": false,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "newLine": "LF",
 
-		"lib": [
-			"DOM",
-			"ES2020",
-			"WebWorker"
-		]
-	}
+    "typeRoots": [
+      "node_modules/@types",
+      "@types"
+    ],
+
+    "lib": [
+      "DOM",
+      "ES2020",
+      "WebWorker"
+    ],
+  }
 }

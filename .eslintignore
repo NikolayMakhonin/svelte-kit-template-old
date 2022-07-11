@@ -1,13 +1,13 @@
-.DS_Store
-node_modules
-/build
-/.svelte-kit
-/package
-.env
-.env.*
-!.env.example
+# project template
+/.idea/
+/.github/
+/docs/
+/tmp/
+/node_modules/
 
-# Ignore files for PNPM, NPM and YARN
-pnpm-lock.yaml
-package-lock.json
-yarn.lock
+# additional
+
+# svelte-kit
+/build/
+/.svelte-kit/
+/package/
