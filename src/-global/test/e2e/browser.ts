@@ -66,7 +66,9 @@ let browsers: Browsers
 export function getBrowsers() {
   if (!browsers) {
     browsers = createBrowsers({
-      browserTypes : process.env.BROWSERS?.split(','),
+      browserTypes: process.env.BROWSERS?.trim()
+        ? process.env.BROWSERS?.split(',')
+        : ['chromium'],
       launchOptions: browserOptions,
     })
   }
@@ -74,11 +76,17 @@ export function getBrowsers() {
   return browsers
 }
 
-export function runInBrowsers<T>(browsers: Browsers, func: (browser: Browser) => Promise<T>|T): Promise<T[]> {
-  return Promise.all(browsers.map(async browser => {
+export async function runInBrowsers(browsers: Browsers, func: (browser: Browser) => Promise<void>|void): Promise<void> {
+  const results = await Promise.allSettled(browsers.map(async browser => {
     const _browser = await browser
     return func(_browser)
   }))
+
+  results.forEach(result => {
+    if (result.status === 'rejected') {
+      throw result.reason
+    }
+  })
 }
 
 // закрываем браузер после завершения всех тестов

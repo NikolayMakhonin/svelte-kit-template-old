@@ -1,11 +1,9 @@
-import {ObjectPool, Pool} from '@flemist/time-limits'
+import {Pool, PoolRunner} from '@flemist/time-limits'
 
 export function createTestPool({
   maxSize,
 }: {
   maxSize: number,
 }) {
-  return new ObjectPool({
-    pool: new Pool(maxSize),
-  })
+  return new PoolRunner(new Pool(maxSize))
 }

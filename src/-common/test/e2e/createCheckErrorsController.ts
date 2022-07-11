@@ -2,7 +2,11 @@
 import {CheckErrorsController} from 'src/-global/test/e2e/CheckErrorsController'
 
 // функция создает контроллер для отслеживания ошибок в браузере
-export function createCheckErrorsController() {
+export function createCheckErrorsController({
+  host = process.env.HOST,
+}: {
+  host?: string,
+} = {}) {
   return new CheckErrorsController({
     // фильтр ошибок JavaScript; false = игнорировать ошибку
     jsErrorsFilter(error) {
@@ -13,7 +17,7 @@ export function createCheckErrorsController() {
     },
     // фильтр ошибок загрузки ресурсов; если url не удовлетворяет регулярному выражению, то ошибка игнорируется
     httpErrorsFilters: {
-      url: new RegExp('^' + process.env.HOST.replace(/\/$/, '').replace(/[\\.]/g, '\\$&') + '(\\/|$)'),
+      url: new RegExp('^' + host.replace(/\/$/, '').replace(/[\\.]/g, '\\$&') + '(\\/|$)'),
     },
   })
 }

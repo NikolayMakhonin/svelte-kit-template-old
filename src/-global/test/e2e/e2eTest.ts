@@ -1,10 +1,11 @@
-import type {Browser, BrowserContext} from 'playwright'
+import type {Browser, BrowserContext, BrowserContextOptions} from 'playwright'
 import {takeScreenShotFromContexts} from './takeScreenShot'
 import {delay} from '@flemist/async-utils'
 import {browserOptions, Browsers, runInBrowsers} from './browser'
 import {e2eTestPool} from './e2eTestPool'
 import fse from 'fs-extra'
 import {throwIfNotFiniteNumber} from '../throwIfNotFiniteNumber'
+import path from 'path'
 
 export type TOnError = (error: Error) => void
 
@@ -22,18 +23,23 @@ export async function usingOnError(func: (onError: TOnError) => Promise<void>) {
   ])
 }
 
+export type CreateContext = (options?: BrowserContextOptions) => Promise<BrowserContext>
+
+export type E2eTestFunc = ({
+  createContext: CreateContext,
+  onError: TOnError,
+}) => Promise<void>
+
 /** вспомогательная функция для удобного запуска e2e тестов */
 export async function e2eTest(
   {
     testName,
     browsers,
-    getContexts,
     delayOnError,
     screenShotsPath,
   }: {
     testName: string,
     browsers: Browsers,
-    getContexts: () => BrowserContext[],
     /** если выбрана опция показывать браузер во время теста,
      * то здесь мы можем указать время задержки при ошибке,
      * чтобы можно было посмотреть на браузер и разобраться в чем проблема */
@@ -42,7 +48,7 @@ export async function e2eTest(
     screenShotsPath?: string,
   },
   /** в этой функции пиши тесты */
-  testFunc: (browser: Browser, onError: TOnError) => Promise<void>,
+  testFunc: E2eTestFunc,
 ) {
   if (delayOnError == null) {
     delayOnError = process.env.DELAY_ON_ERROR
@@ -50,39 +56,51 @@ export async function e2eTest(
       : 0
   }
 
-  if (fse.existsSync(screenShotsPath)) {
-    await fse.remove(screenShotsPath)
+  const screenShotsPathTest = screenShotsPath && path.resolve(screenShotsPath, testName)
+  if (fse.existsSync(screenShotsPathTest)) {
+    await fse.remove(screenShotsPathTest)
   }
 
   const browser: Browser = null
 
   return runInBrowsers(browsers, (browser) => {
-    return e2eTestPool.use(1, async () => {
+    return e2eTestPool.run(1, async () => {
       const browserName = browser.browserType().name() + ' ' + browser.version()
-      const testNameWithBrowser = `${browserName} ${testName}`
+      const testNameWithBrowser = `${testName} > ${browserName}`
+      const screenShotsPathTestBrowser = screenShotsPathTest && path.resolve(screenShotsPathTest, browserName)
+
+      const contexts: BrowserContext[] = []
+      const createContext: CreateContext = async (options) => {
+        const context = await browser.newContext()
+        contexts.push(context)
+        return context
+      }
 
       const startTime = Date.now()
       console.log(`Test Start: ${browserName} ${testNameWithBrowser}`)
       try {
         await usingOnError((onError) => {
-          return testFunc(browser, onError)
+          return testFunc({
+            createContext,
+            onError,
+          })
         })
         console.log(`Test OK (${((Date.now() - startTime) / 1000).toFixed(1)} sec): ${testNameWithBrowser}`)
       }
       catch (error) {
         let log = `Test Error (${((Date.now() - startTime) / 1000).toFixed(1)} sec): ${testNameWithBrowser}`
-        if (screenShotsPath) {
-          log += `\r\nScreenshots: ${screenShotsPath}`
+        if (screenShotsPathTestBrowser) {
+          log += `\r\nScreenshots: ${screenShotsPathTestBrowser}`
         }
         log += `\r\n${error}`
 
         console.error(log)
 
         // делаем скриншот всех окон и вкладок браузера и сохраняем их в папку tmp
-        if (screenShotsPath) {
+        if (screenShotsPathTestBrowser) {
           await takeScreenShotFromContexts({
-            contexts  : getContexts(),
-            outputPath: screenShotsPath,
+            contexts,
+            outputPath: screenShotsPathTestBrowser,
           })
         }
 
