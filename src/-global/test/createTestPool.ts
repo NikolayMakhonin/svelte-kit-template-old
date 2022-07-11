@@ -1,4 +1,4 @@
-import {ObjectPool} from '@flemist/time-limits'
+import {ObjectPool, Pool} from '@flemist/time-limits'
 
 export function createTestPool({
   maxSize,
@@ -6,6 +6,6 @@ export function createTestPool({
   maxSize: number,
 }) {
   return new ObjectPool({
-    maxSize,
+    pool: new Pool(maxSize),
   })
 }

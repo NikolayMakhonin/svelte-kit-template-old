@@ -2,8 +2,10 @@
   "extends": "./.svelte-kit/tsconfig.json",
   "ts-node": {
     "compilerOptions": {
-      "module": "CommonJS"
-    }
+      "module": "CommonJS",
+      "importsNotUsedAsValues": "remove",
+      "preserveValueImports": false
+    },
   },
   "include": [
     "@types/**/*",

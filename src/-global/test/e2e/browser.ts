@@ -2,6 +2,8 @@ import {Browser, chromium, firefox, webkit} from 'playwright'
 import type {LaunchOptions, BrowserType} from 'playwright'
 
 export function getBrowserTypeByName(browserTypeName: string) {
+  browserTypeName = browserTypeName?.trim().toLowerCase()
+
   switch (browserTypeName) {
     case '':
     case void 0:
@@ -32,6 +34,23 @@ export function createBrowser({
   return browser
 }
 
+
+export function createBrowsers({
+  browserTypes,
+  launchOptions,
+}: {
+  browserTypes: (string | BrowserType)[],
+  launchOptions: LaunchOptions,
+}) {
+  return browserTypes.map(browserType => {
+    return createBrowser({
+      browserType,
+      launchOptions,
+    })
+  })
+}
+
+
 export const browserOptions: LaunchOptions = {
   // false - показать браузер во время теста
   // true - скрыть браузер во время теста
@@ -40,23 +59,33 @@ export const browserOptions: LaunchOptions = {
   timeout : 60000,
 }
 
-let browser: Promise<Browser>
+export type Browsers = (Promise<Browser>|Browser)[]
+
+let browsers: Browsers
 /** get common single browser that uses for all tests */
-export function getBrowser() {
-  if (!browser) {
-    browser = createBrowser({
-      browserType  : process.env.BROWSER,
+export function getBrowsers() {
+  if (!browsers) {
+    browsers = createBrowsers({
+      browserTypes : process.env.BROWSERS?.split(','),
       launchOptions: browserOptions,
     })
   }
 
-  return browser
+  return browsers
+}
+
+export function runInBrowsers<T>(browsers: Browsers, func: (browser: Browser) => Promise<T>|T): Promise<T[]> {
+  return Promise.all(browsers.map(async browser => {
+    const _browser = await browser
+    return func(_browser)
+  }))
 }
 
 // закрываем браузер после завершения всех тестов
 after(async () => {
-  const _browser = await browser
-  if (_browser) {
-    await _browser.close()
+  if (browsers) {
+    await runInBrowsers(browsers, async browser => {
+      await browser.close()
+    })
   }
 })
