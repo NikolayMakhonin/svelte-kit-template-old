@@ -2,9 +2,10 @@ import urlJoin from 'url-join'
 import {e2eTest} from 'src/-global/test/e2e/e2eTest'
 import {getBrowsers} from 'src/-global/test/e2e/browser'
 import {createCheckErrorsController} from 'src/-common/test/e2e/createCheckErrorsController'
+import { describe, it } from 'vitest'
 
 describe('service-worker', function () {
-  this.timeout(300000)
+  // this.timeout(300000)
 
   it('install and update', async function () {
     const host = 'http://localhost:4173'
@@ -37,6 +38,6 @@ describe('service-worker', function () {
       await context.close()
     })
 
-    console.log('OK')
+    console.log('e2e OK')
   })
 })

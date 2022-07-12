@@ -1,5 +1,7 @@
 import {Browser, chromium, firefox, webkit} from 'playwright'
 import type {LaunchOptions, BrowserType} from 'playwright'
+import {afterAll} from 'vitest'
+import {e2eState} from "./global";
 
 export function getBrowserTypeByName(browserTypeName: string) {
   browserTypeName = browserTypeName?.trim().toLowerCase()
@@ -34,7 +36,6 @@ export function createBrowser({
   return browser
 }
 
-
 export function createBrowsers({
   browserTypes,
   launchOptions,
@@ -50,22 +51,21 @@ export function createBrowsers({
   })
 }
 
-
-export const browserOptions: LaunchOptions = {
+export const browserOptions: LaunchOptions = e2eState.browserOptions || {
   // false - показать браузер во время теста
   // true - скрыть браузер во время теста
   headless: process.env.SHOW_BROWSER !== 'true',
   // таймаут по-умолчанию для всех действий в этом браузере
   timeout : 60000,
 }
+e2eState.browserOptions = browserOptions
 
 export type Browsers = (Promise<Browser>|Browser)[]
 
-let browsers: Browsers
 /** get common single browser that uses for all tests */
 export function getBrowsers() {
-  if (!browsers) {
-    browsers = createBrowsers({
+  if (!e2eState.browsers) {
+    e2eState.browsers = createBrowsers({
       browserTypes: process.env.BROWSERS?.trim()
         ? process.env.BROWSERS?.split(',')
         : ['chromium'],
@@ -73,7 +73,7 @@ export function getBrowsers() {
     })
   }
 
-  return browsers
+  return e2eState.browsers
 }
 
 export async function runInBrowsers(browsers: Browsers, func: (browser: Browser) => Promise<void>|void): Promise<void> {
@@ -90,9 +90,9 @@ export async function runInBrowsers(browsers: Browsers, func: (browser: Browser)
 }
 
 // закрываем браузер после завершения всех тестов
-after(async () => {
-  if (browsers) {
-    await runInBrowsers(browsers, async browser => {
+afterAll(async () => {
+  if (e2eState.browsers) {
+    await runInBrowsers(e2eState.browsers, async browser => {
       await browser.close()
     })
   }

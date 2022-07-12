@@ -7,6 +7,20 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('vite').UserConfig} */
 const config = {
+  test: {
+    threads: false,
+    isolate: true,
+    maxConcurrency: 10,
+    include: [
+      'src/**/*.{e2e,test,stress,perf}.ts',
+    ],
+  },
+  resolve: {
+    alias: {
+      src: path.resolve(__dirname, './src'),
+      '~': path.resolve(__dirname),
+    },
+  },
   build: {
     minify       : 'terser',
     terserOptions: {
