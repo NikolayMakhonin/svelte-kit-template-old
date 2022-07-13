@@ -16,6 +16,7 @@
     "lint": "eslint ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
     "lint:fix": "eslint --fix ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
     "lint:wizard": "eslint-nibble --cache --multi ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
+    "test-concurrent": "node --loader=@esbuild-kit/esm-loader --experimental-specifier-resolution=node \"src/-global/test/bdd/run.ts\" \"src/**/*.test.*\"",
     "test": "mocha ./src/**/*.test.ts",
     "test:watch": "mocha --watch ./src/**/*.test.ts",
     "test:e2e:dev": "cross-env HOST=http://localhost:3000 mocha ./src/**/*.e2e.ts",

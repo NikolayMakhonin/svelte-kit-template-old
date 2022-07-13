@@ -1,12 +1,14 @@
 import type {AsyncFunc, Func} from 'mocha'
-import {IRunner, ISuite, ITest, RunnerConstants} from './contracts'
+import type {IRunner, ISuite, ITest} from './contracts'
+import {RunnerConstants} from './contracts'
 import {runFunc} from './runFunc'
 
 export class SuiteDefault implements ISuite {
-  constructor(title: string, skip: boolean, isRoot?: boolean) {
+  constructor(parent: ISuite | null, title: string, skip: boolean, isRoot?: boolean) {
     this.title = title
     this.skip = skip
     this.root = isRoot || false
+    this.parent = parent
   }
 
   readonly title: string
@@ -21,9 +23,9 @@ export class SuiteDefault implements ISuite {
   private readonly _onlySuites: ISuite[] = []
   private readonly _onlyTests: ITest[] = []
   private _timeout: number = 2000
+  readonly parent: ISuite | undefined = void 0
 
   file: string | undefined = void 0
-  parent: ISuite | undefined = void 0
   pending: boolean = false
 
   addSuite(suite: ISuite): this {
@@ -101,6 +103,7 @@ export class SuiteDefault implements ISuite {
     runner.emit(RunnerConstants.EVENT_TEST_BEGIN, this)
     try {
       this.pending = true
+      runner.emit(RunnerConstants.EVENT_TEST_PENDING, this)
       if (skip) {
         return
       }
@@ -125,6 +128,7 @@ export class SuiteDefault implements ISuite {
       }
       catch (err) {
         console.log('Error test: ' + test.fullTitle())
+        runner.emit(RunnerConstants.EVENT_TEST_FAIL, this)
         throw err
       }
 
@@ -142,9 +146,11 @@ export class SuiteDefault implements ISuite {
       }
 
       console.log(`End (${((Date.now() - startTime) / 1000).toFixed(3)} sec): ${test.fullTitle()}`)
+
+      runner.emit(RunnerConstants.EVENT_TEST_PASS, this)
     }
     finally {
-      runner.emit(RunnerConstants.EVENT_SUITE_END, this)
+      runner.emit(RunnerConstants.EVENT_TEST_END, this)
     }
   }
 

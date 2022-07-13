@@ -5,5 +5,5 @@ import {loadModule} from './loadModule'
 
 export async function loadFiles(testFilesPatterns: string[]) {
   const files = await globby(testFilesPatterns)
-  files.forEach(filePath => loadModule(path.resolve(filePath)))
+  return Promise.all(files.map(filePath => loadModule(path.resolve(filePath))))
 }

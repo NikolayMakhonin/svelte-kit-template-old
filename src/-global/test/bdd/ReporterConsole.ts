@@ -1,4 +1,5 @@
-import {IRunner, RunnerConstants} from './contracts'
+import type {IRunner} from './contracts'
+import {RunnerConstants} from './contracts'
 
 export class ReporterConsole {
   private _indents: number

@@ -1,6 +1,6 @@
 import type {Stats} from 'mocha'
 import type {IRunner, ISuite, RunnerEventNames, RunnerListener} from './contracts'
-import {EventEmitter} from 'eventemitter3'
+import EventEmitter from 'eventemitter3'
 
 export class RunnerDefault implements IRunner {
   private readonly _eventEmitter = new EventEmitter<RunnerEventNames>()

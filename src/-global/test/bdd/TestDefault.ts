@@ -1,14 +1,16 @@
 import type {AsyncFunc, Func} from 'mocha'
-import {ISuite, ITest, TestConstants} from './contracts'
+import type {ISuite, ITest} from './contracts'
+import {TestConstants} from './contracts'
 
 export class TestDefault implements ITest {
-  constructor(title: string, fn: Func | AsyncFunc, skip: boolean) {
+  constructor(parent: ISuite, title: string, fn: Func | AsyncFunc, skip: boolean) {
     this.title = title
     this.fn = fn
     this.body = (fn || '').toString()
     this.async = !!(fn && fn.length)
     this.sync = !this.async
     this.skip = skip
+    this.parent = parent
   }
 
   readonly title: string
@@ -18,11 +20,11 @@ export class TestDefault implements ITest {
   readonly sync: boolean
   readonly skip: boolean
   private _timeout: number = 2000
+  readonly parent: ISuite | undefined = void 0
 
   err: Error | undefined = void 0 // added by reporters
   duration: number | undefined = void 0
   file: string | undefined = void 0
-  parent: ISuite | undefined = void 0
   pending: boolean = false
   state: 'failed' | 'passed' | 'pending' | undefined = void 0
   timedOut: boolean = false
