@@ -1,83 +1,68 @@
-import type {TBeforeAfterFunc, TDescribeFunc, TTest, TTestFunc, TTestNode} from './contracts'
+import type {
+  ISuite, ITest,
+  TBeforeAfterFunc,
+  TDescribeFunc,
+  TTestFunc,
+} from './contracts'
+import {SuiteDefault} from './SuiteDefault'
+import {TestDefault} from './TestDefault'
 
-function createTestNode(name: string, disabled: boolean): TTestNode {
-  return {
-    name,
-    disabled,
-    timeout   : void 0,
-    before    : [],
-    beforeEach: [],
-    tests     : [],
-    nodes     : [],
-    afterEach : [],
-    after     : [],
-  }
-}
+export const rootSuite = new SuiteDefault('All Tests', false, true)
+global.parentSuite = rootSuite
 
-export const testRoot = createTestNode(null, false)
-global.parentTestNode = testRoot
-
-function _describe(name: string, func: TDescribeFunc, disabled: boolean) {
-  const parentTestNode = global.parentTestNode as TTestNode
+function _describe(title: string, func: TDescribeFunc, skip: boolean) {
+  const parentSuite: ISuite = global.parentSuite
   try {
-    const testNode = createTestNode(name, disabled)
-    parentTestNode.nodes.push(testNode)
-    global.parentTestNode = testNode
-    func.call({
-      timeout(value: number) {
-        testNode.timeout = value
-      },
-    })
+    const suite = new SuiteDefault(title, skip)
+    parentSuite.addSuite(suite)
+    global.parentSuite = suite
+    func.call(suite)
   }
   finally {
-    global.parentTestNode = parentTestNode
+    global.parentSuite = parentSuite
   }
 }
 
-function _it(name: string, func: TTestFunc, disabled: boolean) {
-  const parentTestNode = global.parentTestNode as TTestNode
-  const test: TTest = {
-    name,
-    disabled,
-    func,
-  }
-  parentTestNode.tests.push(test)
+function _it(title: string, func: TTestFunc, skip: boolean) {
+  const parentSuite: ISuite = global.parentSuite
+  const test: ITest = new TestDefault(title, func, skip)
+  parentSuite.tests.push(test)
 }
 
-function describe(name: string, func: TDescribeFunc) {
-  _describe(name, func, false)
+function describe(title: string, func: TDescribeFunc) {
+  _describe(title, func, false)
 }
 
-function it(name: string, func: TTestFunc) {
-  _it(name, func, false)
+function it(title: string, func: TTestFunc) {
+  _it(title, func, false)
 }
 
-function xdescribe(name: string, func: () => Promise<void>|void) {
-  _describe(name, func, true)
+function xdescribe(title: string, func: () => Promise<void>|void) {
+  _describe(title, func, true)
 }
 
-function xit(name: string, func: () => Promise<void>|void) {
-  _it(name, func, true)
+function xit(title: string, func: () => Promise<void>|void) {
+  _it(title, func, true)
 }
 
 function before(func: TBeforeAfterFunc) {
-  const parentTestNode = global.parentTestNode as TTestNode
-  parentTestNode.before.push(func)
+  const parentSuite: ISuite = global.parentSuite
+  parentSuite.beforeAll(func)
 }
 
 function after(func: TBeforeAfterFunc) {
-  const parentTestNode = global.parentTestNode as TTestNode
-  parentTestNode.after.push(func)
+  const parentSuite: ISuite = global.parentSuite
+  parentSuite.afterAll(func)
 }
 
 function beforeEach(func: TBeforeAfterFunc) {
-  const parentTestNode = global.parentTestNode as TTestNode
-  parentTestNode.beforeEach.push(func)
+  const parentSuite: ISuite = global.parentSuite
+  parentSuite.beforeEach(func)
 }
 
 function afterEach(func: TBeforeAfterFunc) {
-  const parentTestNode = global.parentTestNode as TTestNode
-  parentTestNode.afterEach.push(func)
+  const parentSuite: ISuite = global.parentSuite
+  parentSuite.afterEach(func)
 }
 
 (global as any).it = it

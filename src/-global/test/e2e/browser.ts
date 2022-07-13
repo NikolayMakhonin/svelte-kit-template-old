@@ -1,7 +1,6 @@
 import {Browser, chromium, firefox, webkit} from 'playwright'
 import type {LaunchOptions, BrowserType} from 'playwright'
-import {afterAll} from 'vitest'
-import {e2eState} from "./global";
+import {e2eState} from './global'
 
 export function getBrowserTypeByName(browserTypeName: string) {
   browserTypeName = browserTypeName?.trim().toLowerCase()
@@ -90,7 +89,7 @@ export async function runInBrowsers(browsers: Browsers, func: (browser: Browser)
 }
 
 // закрываем браузер после завершения всех тестов
-afterAll(async () => {
+after(async () => {
   if (e2eState.browsers) {
     await runInBrowsers(e2eState.browsers, async browser => {
       await browser.close()

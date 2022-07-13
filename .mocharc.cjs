@@ -2,8 +2,8 @@
 
 module.exports = {
   require: [
-    'tsconfig-paths/register',
-    'ts-node/register',
+    // 'tsconfig-paths/register',
+    // 'ts-node/register',
     '@flemist/test-utils/register',
   ],
   'watch-files': ['./src/**'],
@@ -11,6 +11,6 @@ module.exports = {
   'node-option': [
     // 'prof',
     'experimental-specifier-resolution=node',
-    'loader=ts-node/esm',
+    'loader=@esbuild-kit/esm-loader',
   ],
 }
