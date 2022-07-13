@@ -4,13 +4,15 @@ import {RunnerConstants} from './contracts'
 import {runFunc} from './runFunc'
 
 export class SuiteDefault implements ISuite {
-  constructor(parent: ISuite | null, title: string, skip: boolean, isRoot?: boolean) {
+  constructor(file: string, parent: ISuite | null, title: string, skip: boolean, isRoot?: boolean) {
     this.title = title
     this.skip = skip
     this.root = isRoot || false
     this.parent = parent
+    this.file = file
   }
 
+  readonly type = 'suite'
   readonly title: string
   readonly root: boolean
   readonly skip: boolean
@@ -23,10 +25,9 @@ export class SuiteDefault implements ISuite {
   private readonly _onlySuites: ISuite[] = []
   private readonly _onlyTests: ITest[] = []
   readonly parent: ISuite | undefined = void 0
-  readonly type = 'suite'
+  readonly file: string | undefined = void 0
 
   private _timeout: number = 2000
-  file: string | undefined = void 0
   pending: boolean = false
 
   addSuite(suite: ISuite): this {
@@ -97,6 +98,10 @@ export class SuiteDefault implements ISuite {
   }
 
   async runTest(runner: IRunner, skip: boolean, test: ITest) {
+    if (runner._grep && !runner._grep.test(test.fullTitle())) {
+      return
+    }
+
     if (!skip) {
       skip = test.skip
     }
@@ -125,8 +130,10 @@ export class SuiteDefault implements ISuite {
 
     try {
       await runFunc(runner, test, test.fn)
+      test.duration = Date.now() - startTime
     }
     catch (err) {
+      test.duration = Date.now() - startTime
       console.log('Error test: ' + test.fullTitle())
       test.err = err
       runner.emit(RunnerConstants.EVENT_TEST_FAIL, test, err)

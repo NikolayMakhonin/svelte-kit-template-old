@@ -7,13 +7,13 @@ import type {
 import {SuiteDefault} from './SuiteDefault'
 import {TestDefault} from './TestDefault'
 
-export const rootSuite = new SuiteDefault(null, '', false, true)
+export const rootSuite = new SuiteDefault(null, null, '', false, true)
 global.parentSuite = rootSuite
 
 function _describe(title: string, func: TDescribeFunc, skip: boolean) {
   const parentSuite: ISuite = global.parentSuite
   try {
-    const suite = new SuiteDefault(parentSuite, title, skip)
+    const suite = new SuiteDefault(null, parentSuite, title, skip)
     parentSuite.addSuite(suite)
     global.parentSuite = suite
     func.call(suite)
@@ -25,7 +25,7 @@ function _describe(title: string, func: TDescribeFunc, skip: boolean) {
 
 function _it(title: string, func: TTestFunc, skip: boolean) {
   const parentSuite: ISuite = global.parentSuite
-  const test: ITest = new TestDefault(parentSuite, title, func, skip)
+  const test: ITest = new TestDefault(null, parentSuite, title, func, skip)
   parentSuite.tests.push(test)
 }
 

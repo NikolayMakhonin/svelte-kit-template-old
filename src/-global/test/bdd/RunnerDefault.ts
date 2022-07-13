@@ -3,13 +3,12 @@ import type {IRunner, ISuite, ITest, RunnerEventNames, RunnerListener} from './c
 import EventEmitter from 'eventemitter3'
 
 export class RunnerDefault implements IRunner {
-  private readonly _eventEmitter = new EventEmitter<RunnerEventNames>()
+  constructor(grep: RegExp | null) {
+    this._grep = grep
+  }
 
-  failures: number = 0
-  started: boolean = false
-  suite: ISuite = null
-  test: ITest = null
-  total: number = 0
+  private readonly _eventEmitter = new EventEmitter<RunnerEventNames>()
+  readonly _grep: RegExp
   readonly stats: Stats = {
     suites  : 0,
     tests   : 0,
@@ -20,6 +19,12 @@ export class RunnerDefault implements IRunner {
     end     : void 0,
     duration: void 0,
   }
+
+  failures: number = 0
+  started: boolean = false
+  suite: ISuite = null
+  test: ITest = null
+  total: number = 0
 
   on(event: RunnerEventNames, listener: RunnerListener): this {
     this._eventEmitter.on(event, listener)

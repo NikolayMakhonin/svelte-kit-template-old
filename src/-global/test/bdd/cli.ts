@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import yargs from 'yargs'
 import {runTests} from './runTests'
 import dotenv from 'dotenv'
@@ -23,12 +22,19 @@ export async function run() {
       type       : 'string',
       description: 'Specify reporter to use',
     })
+    .option('grep', {
+      alias      : 'g',
+      type       : 'string',
+      description: 'Only run tests matching this string or regexp',
+      'default'  : null,
+    })
     .argv
 
   const {
     watch,
     timeout,
     reporter: reporterPath,
+    grep,
     _: [,, ...filesGlobs],
   } = argv
 
@@ -37,6 +43,7 @@ export async function run() {
     timeout,
     reporterPath,
     filesGlobs: filesGlobs as string[],
+    grep      : grep && new RegExp(grep),
   })
 }
 

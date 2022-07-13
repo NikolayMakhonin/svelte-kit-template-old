@@ -45,6 +45,7 @@ export interface IRunner {
   test: ITest
   total: number
   readonly stats: Stats
+  readonly _grep: RegExp
 
   on(event: RunnerEventNames, listener: RunnerListener): this
   once(event: RunnerEventNames, listener: RunnerListener): this

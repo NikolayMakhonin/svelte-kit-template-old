@@ -12,14 +12,16 @@ export async function runTests({
   timeout,
   reporterPath,
   filesGlobs,
+  grep,
 }: {
   watch: boolean,
   timeout: number,
   reporterPath: string,
   filesGlobs: string[],
+  grep: RegExp,
 }) {
   try {
-    const runner: IRunner = new RunnerDefault()
+    const runner: IRunner = new RunnerDefault(grep)
     if (reporterPath) {
       const ReporterModule = await loadModule(reporterPath)
       const Reporter: ReporterConstructor = ReporterModule.default

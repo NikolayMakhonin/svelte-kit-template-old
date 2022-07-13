@@ -3,7 +3,7 @@ import type {ISuite, ITest} from './contracts'
 import {TestConstants} from './contracts'
 
 export class TestDefault implements ITest {
-  constructor(parent: ISuite, title: string, fn: Func | AsyncFunc, skip: boolean) {
+  constructor(file: string, parent: ISuite, title: string, fn: Func | AsyncFunc, skip: boolean) {
     this.title = title
     this.fn = fn
     this.body = (fn || '').toString()
@@ -11,8 +11,10 @@ export class TestDefault implements ITest {
     this.sync = !this.async
     this.skip = skip
     this.parent = parent
+    this.file = file
   }
 
+  readonly type = 'test'
   readonly title: string
   readonly fn: Func | AsyncFunc | undefined
   readonly body: string
@@ -21,14 +23,13 @@ export class TestDefault implements ITest {
   readonly skip: boolean
   private _timeout: number = 2000
   readonly parent: ISuite | undefined = void 0
+  readonly file: string | undefined = void 0
 
   err: Error | undefined = void 0 // added by reporters
   duration: number | undefined = void 0
-  file: string | undefined = void 0
   pending: boolean = false
   state: 'failed' | 'passed' | 'pending' | undefined = void 0
   timedOut: boolean = false
-  type = 'test'
 
   timeout(): number
   timeout(ms: number): this
