@@ -1,6 +1,6 @@
 {
   "type": "module",
   "bin": {
-    "mocha": "./run.ts"
+    "mocha": "./cli.ts"
   }
 }

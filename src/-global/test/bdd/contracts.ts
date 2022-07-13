@@ -42,6 +42,7 @@ export interface IRunner {
   failures: number
   started: boolean
   suite: ISuite
+  test: ITest
   total: number
   readonly stats: Stats
 
@@ -72,7 +73,7 @@ export interface ITest {
   pending: boolean;
   state: 'failed' | 'passed' | 'pending' | undefined;
   timedOut: boolean;
-  type: string;
+  type: 'test';
   skip: boolean;
   timeout(): number;
   timeout(ms: number): this;
@@ -94,6 +95,7 @@ export interface ISuite {
   file: string | undefined;
   parent: ISuite | undefined;
   pending: boolean;
+  type: 'suite';
   addSuite(suite: ISuite): this;
   addTest(test: ITest): this;
   afterAll(fn: Func | AsyncFunc): this;

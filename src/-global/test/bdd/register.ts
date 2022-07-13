@@ -7,7 +7,7 @@ import type {
 import {SuiteDefault} from './SuiteDefault'
 import {TestDefault} from './TestDefault'
 
-export const rootSuite = new SuiteDefault(null, 'All Tests', false, true)
+export const rootSuite = new SuiteDefault(null, '', false, true)
 global.parentSuite = rootSuite
 
 function _describe(title: string, func: TDescribeFunc, skip: boolean) {

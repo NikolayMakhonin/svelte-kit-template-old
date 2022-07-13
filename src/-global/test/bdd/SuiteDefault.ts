@@ -22,9 +22,10 @@ export class SuiteDefault implements ISuite {
   private readonly _beforeEach: (Func | AsyncFunc)[] = []
   private readonly _onlySuites: ISuite[] = []
   private readonly _onlyTests: ITest[] = []
-  private _timeout: number = 2000
   readonly parent: ISuite | undefined = void 0
+  readonly type = 'suite'
 
+  private _timeout: number = 2000
   file: string | undefined = void 0
   pending: boolean = false
 
@@ -100,58 +101,56 @@ export class SuiteDefault implements ISuite {
       skip = test.skip
     }
 
-    runner.emit(RunnerConstants.EVENT_TEST_BEGIN, this)
+    if (skip) {
+      test.pending = true
+      runner.emit(RunnerConstants.EVENT_TEST_PENDING, test)
+      return
+    }
+
+    runner.emit(RunnerConstants.EVENT_TEST_BEGIN, test)
+    const startTime = Date.now()
+
     try {
-      this.pending = true
-      runner.emit(RunnerConstants.EVENT_TEST_PENDING, this)
-      if (skip) {
-        return
+      for (let i = 0, len = this._beforeEach.length; i < len; i++) {
+        runner.emit(RunnerConstants.EVENT_HOOK_BEGIN, test)
+        await runFunc(runner, this, this._beforeEach[i])
+        runner.emit(RunnerConstants.EVENT_HOOK_END, test)
       }
-
-      const startTime = Date.now()
-
-      try {
-        for (let i = 0, len = this._beforeEach.length; i < len; i++) {
-          runner.emit(RunnerConstants.EVENT_HOOK_BEGIN, this)
-          await runFunc(this, this._beforeEach[i])
-          runner.emit(RunnerConstants.EVENT_HOOK_END, this)
-        }
-      }
-      catch (err) {
-        console.log('Error beforeEach: ' + this.fullTitle())
-        runner.emit(RunnerConstants.EVENT_HOOK_END, this)
-        throw err
-      }
-
-      try {
-        await runFunc(test, test.fn)
-      }
-      catch (err) {
-        console.log('Error test: ' + test.fullTitle())
-        runner.emit(RunnerConstants.EVENT_TEST_FAIL, this)
-        throw err
-      }
-
-      try {
-        for (let i = 0, len = this._afterEach.length; i < len; i++) {
-          runner.emit(RunnerConstants.EVENT_HOOK_BEGIN, this)
-          await runFunc(this, this._afterEach[i])
-          runner.emit(RunnerConstants.EVENT_HOOK_END, this)
-        }
-      }
-      catch (err) {
-        console.log('Error afterEach: ' + this.fullTitle())
-        runner.emit(RunnerConstants.EVENT_HOOK_END, this)
-        throw err
-      }
-
-      console.log(`End (${((Date.now() - startTime) / 1000).toFixed(3)} sec): ${test.fullTitle()}`)
-
-      runner.emit(RunnerConstants.EVENT_TEST_PASS, this)
     }
-    finally {
-      runner.emit(RunnerConstants.EVENT_TEST_END, this)
+    catch (err) {
+      console.log('Error beforeEach: ' + this.fullTitle())
+      runner.emit(RunnerConstants.EVENT_HOOK_END, test)
+      throw err
     }
+
+    try {
+      await runFunc(runner, test, test.fn)
+    }
+    catch (err) {
+      console.log('Error test: ' + test.fullTitle())
+      test.err = err
+      runner.emit(RunnerConstants.EVENT_TEST_FAIL, test, err)
+      runner.emit(RunnerConstants.EVENT_TEST_END, test)
+      throw err
+    }
+
+    try {
+      for (let i = 0, len = this._afterEach.length; i < len; i++) {
+        runner.emit(RunnerConstants.EVENT_HOOK_BEGIN, test)
+        await runFunc(runner, this, this._afterEach[i])
+        runner.emit(RunnerConstants.EVENT_HOOK_END, test)
+      }
+    }
+    catch (err) {
+      console.log('Error afterEach: ' + this.fullTitle())
+      runner.emit(RunnerConstants.EVENT_HOOK_END, test)
+      throw err
+    }
+
+    console.log(`End (${((Date.now() - startTime) / 1000).toFixed(3)} sec): ${test.fullTitle()}`)
+
+    runner.emit(RunnerConstants.EVENT_TEST_PASS, test)
+    runner.emit(RunnerConstants.EVENT_TEST_END, test)
   }
 
   async run(runner: IRunner, skip: boolean) {
@@ -161,12 +160,12 @@ export class SuiteDefault implements ISuite {
 
     runner.emit(RunnerConstants.EVENT_SUITE_BEGIN, this)
     try {
-      this.pending = true
+      this.pending = skip
       const startTime = Date.now()
       try {
         for (let i = 0, len = this._beforeAll.length; i < len; i++) {
           runner.emit(RunnerConstants.EVENT_HOOK_BEGIN, this)
-          await runFunc(this, this._beforeAll[i])
+          await runFunc(runner, this, this._beforeAll[i])
           runner.emit(RunnerConstants.EVENT_HOOK_END, this)
         }
       }
@@ -184,7 +183,7 @@ export class SuiteDefault implements ISuite {
       try {
         for (let i = 0, len = this._afterAll.length; i < len; i++) {
           runner.emit(RunnerConstants.EVENT_HOOK_BEGIN, this)
-          await runFunc(this, this._afterAll[i])
+          await runFunc(runner, this, this._afterAll[i])
           runner.emit(RunnerConstants.EVENT_HOOK_END, this)
         }
       }

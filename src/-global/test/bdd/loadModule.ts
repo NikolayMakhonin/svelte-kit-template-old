@@ -1,6 +1,4 @@
-import type {Module} from 'module'
-
-export function loadModule(_path: string): Promise<typeof Module> | typeof Module {
+export function loadModule(_path: string): Promise<any> | any {
   // if (typeof require === 'function') {
   //   return require(_path)
   // }

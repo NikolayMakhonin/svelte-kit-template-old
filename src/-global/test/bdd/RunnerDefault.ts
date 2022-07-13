@@ -1,5 +1,5 @@
 import type {Stats} from 'mocha'
-import type {IRunner, ISuite, RunnerEventNames, RunnerListener} from './contracts'
+import type {IRunner, ISuite, ITest, RunnerEventNames, RunnerListener} from './contracts'
 import EventEmitter from 'eventemitter3'
 
 export class RunnerDefault implements IRunner {
@@ -8,6 +8,7 @@ export class RunnerDefault implements IRunner {
   failures: number = 0
   started: boolean = false
   suite: ISuite = null
+  test: ITest = null
   total: number = 0
   readonly stats: Stats = {
     suites  : 0,
