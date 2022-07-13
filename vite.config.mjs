@@ -5,15 +5,19 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// console.log(process.env)
+
 /** @type {import('vite').UserConfig} */
 const config = {
   test: {
-    threads: false,
-    isolate: true,
+    threads       : false,
+    isolate       : false,
     maxConcurrency: 10,
-    include: [
+    globals       : true,
+    include       : [
       'src/**/*.{e2e,test,stress,perf}.ts',
     ],
+    concurrentFiles: true,
   },
   resolve: {
     alias: {
