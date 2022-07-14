@@ -271,7 +271,7 @@ describe('service-worker', function () {
         await checkErrorsController.subscribeJsErrors(page, onError)
         await mainPageTest({name: 'first online', waitNewServiceWorker: true})
 
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 5; i++) {
           console.log('iteration: ' + i)
           const logPrefix = `${i}: `
 
