@@ -15,9 +15,22 @@ export async function subscribeJsErrors({
   const callbackName = 'callback_191b355ea6f64499a6607ad571da5d4d'
 
   await page.exposeFunction(callbackName, (error: string) => {
-    if (filter && filter(error)) {
+    let isError: boolean
+    try {
+      if (!filter && filter(error)) {
+        return
+      }
+    }
+    catch (err) {
+      error = err
+    }
+
+    try {
       console.error(error)
       onError(new Error(error))
+    }
+    catch (err) {
+      // empty
     }
   })
 

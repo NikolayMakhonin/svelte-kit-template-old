@@ -1,6 +1,6 @@
 import urlJoin from 'url-join'
-// import {e2eTest} from 'src/-global/test/e2e/e2eTest'
-import {createBrowser} from 'src/-global/test/e2e/browser'
+import {e2eTest} from 'src/-global/test/e2e/e2eTest'
+import {createBrowser, getBrowsers} from 'src/-global/test/e2e/browser'
 import {createCheckErrorsController} from 'src/-common/test/e2e/createCheckErrorsController'
 import {calcPerformanceAsync} from 'rdtsc'
 import type {Browser, BrowserContext, Page, Worker} from 'playwright'
@@ -117,8 +117,6 @@ describe('service-worker', function () {
   // this.timeout(300000)
 
   it('install and update', async function () {
-    // const browsers = getBrowsers()
-
     type PreviewState = {
       port: number,
       proc: Proc,
@@ -183,94 +181,84 @@ describe('service-worker', function () {
       previewState = null
     }
 
-    // await e2eTest({
-    //   testName       : 'service-worker > install and update',
-    //   browsers,
-    //   screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
-    // }, async ({createContext, onError}) => {
-    await build()
-    await previewRun()
+    const browsers = getBrowsers()
 
-    const browser = await createBrowser({
-      browserType  : 'chromium',
-      launchOptions: {
-        headless: true,
-        // args    : ['--unsafely-treat-insecure-origin-as-secure=' + getHost()],
-        timeout : 60000,
-      },
-    })
+    await e2eTest({
+      testName       : 'service-worker > install and update',
+      browsers,
+      screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
+    }, async ({createContext, onError}) => {
+      await build()
+      await previewRun()
 
-    const context = await browser.newContext()
-    const page = await context.newPage()
-    await checkErrorsController.subscribeJsErrors(page, (err) => {
-      console.error(err)
-      assert.fail(err + '')
-    })
+      const context = await createContext()
+      const page = await context.newPage()
+      await checkErrorsController.subscribeJsErrors(page, onError)
 
-    let prevHtml: string
-    async function mainPageTest({
-      name,
-      reload,
-      changed,
-      waitNewServiceWorker,
-    }: {
-      name: string,
-      reload?: boolean,
-      changed?: boolean,
-      waitNewServiceWorker?: boolean,
-    }) {
-      console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
-      const serviceworkerPromise = waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
-        context.once('serviceworker', resolve)
-      })
+      let prevHtml: string
+      async function mainPageTest({
+        name,
+        reload,
+        changed,
+        waitNewServiceWorker,
+      }: {
+        name: string,
+        reload?: boolean,
+        changed?: boolean,
+        waitNewServiceWorker?: boolean,
+      }) {
+        console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
+        const serviceworkerPromise = waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
+          context.once('serviceworker', resolve)
+        })
 
-      if (!reload) {
-        await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
-        // await page.waitForSelector('link')
-      }
-      else {
-        await page.reload({waitUntil: 'networkidle'})
-      }
-
-      const serviceworker = await serviceworkerPromise
-
-      await checkErrorsController.checkHttpErrors(page)
-
-      const html = await page.innerHTML('html')
-      console.log('html: ' + html?.length)
-
-      if (prevHtml) {
-        if (changed) {
-          assert.notStrictEqual(html, prevHtml)
+        if (!reload) {
+          await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
+          // await page.waitForSelector('link')
         }
         else {
-          assert.strictEqual(html, prevHtml, name)
+          await page.reload({waitUntil: 'networkidle'})
         }
+
+        const serviceworker = await serviceworkerPromise
+
+        await checkErrorsController.checkHttpErrors(page)
+
+        const html = await page.innerHTML('html')
+        console.log('html: ' + html?.length)
+
+        if (prevHtml) {
+          if (changed) {
+            assert.notStrictEqual(html, prevHtml)
+          }
+          else {
+            assert.strictEqual(html, prevHtml, name)
+          }
+        }
+        prevHtml = html
       }
-      prevHtml = html
-    }
 
-    await mainPageTest({name: 'first online'})
-    await mainPageTest({name: 'first online', reload: true})
+      await mainPageTest({name: 'first online'})
+      await mainPageTest({name: 'first online', reload: true})
 
-    await previewStop()
+      await previewStop()
 
-    await mainPageTest({name: 'first offline'})
-    await mainPageTest({name: 'first offline', reload: true})
+      await mainPageTest({name: 'first offline'})
+      await mainPageTest({name: 'first offline', reload: true})
 
-    await build()
+      await build()
 
-    await mainPageTest({name: 'rebuild offline'})
-    await mainPageTest({name: 'rebuild offline', reload: true})
+      await mainPageTest({name: 'rebuild offline'})
+      await mainPageTest({name: 'rebuild offline', reload: true})
 
-    await previewRun()
+      await previewRun()
 
-    await mainPageTest({name: 'rebuild online'})
-    await mainPageTest({name: 'rebuild online', changed: true})
-    await mainPageTest({name: 'rebuild online', reload: true})
+      await mainPageTest({name: 'rebuild online'})
+      await mainPageTest({name: 'rebuild online', changed: true})
+      await mainPageTest({name: 'rebuild online', reload: true})
 
-    await context.close()
-    // })
+      await context.close()
+    })
 
     console.log('e2e OK')
   }, 120000)
