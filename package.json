@@ -16,11 +16,10 @@
     "lint": "eslint ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
     "lint:fix": "eslint --fix ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
     "lint:wizard": "eslint-nibble --cache --multi ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
-    "test-concurrent": "node --loader=@esbuild-kit/esm-loader --experimental-specifier-resolution=node \"src/-global/test/bdd/run.ts\" \"src/**/*.test.*\"",
-    "test": "mocha ./src/**/*.test.ts",
-    "test:watch": "mocha --watch ./src/**/*.test.ts",
-    "test:e2e:dev": "cross-env HOST=http://localhost:3000 mocha ./src/**/*.e2e.ts",
-    "test:e2e:dev:debug": "cross-env HOST=http://localhost:3000 SHOW_BROWSER=true DELAY_ON_ERROR=600000 mocha ./src/**/*.e2e.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e:dev": "cross-env HOST=http://localhost:3000 vitest --ui e2e",
+    "test:e2e:dev:debug": "cross-env HOST=http://localhost:3000 SHOW_BROWSER=true DELAY_ON_ERROR=600000 vitest --ui e2e",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch"
   },
@@ -45,6 +44,7 @@
     "@types/node": "18.0.0",
     "@types/serviceworker": "0.0.48",
     "@types/yargs": "^17.0.10",
+    "@vitest/ui": "^0.18.0",
     "cross-env": "7.0.3",
     "dotenv": "^16.0.1",
     "eslint": "8.18.0",
@@ -64,6 +64,7 @@
     "typescript": "^4.7.4",
     "url-join": "=4.0.1",
     "vite": "2.9.14",
+    "vitest": "^0.18.0",
     "yargs": "^17.5.1"
   },
   "dependencies": {

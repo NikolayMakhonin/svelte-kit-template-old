@@ -89,7 +89,7 @@ export async function runInBrowsers(browsers: Browsers, func: (browser: Browser)
 }
 
 // закрываем браузер после завершения всех тестов
-after(async () => {
+afterAll(async () => {
   if (e2eState.browsers) {
     await runInBrowsers(e2eState.browsers, async browser => {
       await browser.close()
