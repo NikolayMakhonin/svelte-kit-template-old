@@ -177,11 +177,11 @@ sw.addEventListener('fetch', (event) => {
     let response = await cache?.match(url)
 
     if (response) {
-      console.log(LOG_PREFIX + `fetch from cache ${url}`)
+      console.log(LOG_PREFIX + `fetch from cache ${CACHE_KEY} ${url}`)
     }
     else {
       response = await fetch(event.request)
-      console.log(LOG_PREFIX + `fetch ${url}`)
+      console.log(LOG_PREFIX + `fetch load ${url}`)
     }
 
     return response
