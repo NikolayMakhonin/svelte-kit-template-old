@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const isTest = process.env.NODE_ENV === 'test'
 const isDev = process.env.NODE_ENV === 'development'
+const isLegacy = false
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -43,7 +44,7 @@ const config = {
   },
   plugins: [
     sveltekit(),
-    !isTest && {
+    !isTest && isLegacy && {
       name: 'vite-plugin-babel',
       config(config, config_env) {
         return {

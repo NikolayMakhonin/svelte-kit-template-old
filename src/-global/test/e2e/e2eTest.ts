@@ -25,10 +25,14 @@ export async function usingOnError(func: (onError: TOnError) => Promise<void>) {
 
 export type CreateContext = (options?: BrowserContextOptions) => Promise<BrowserContext>
 
-export type E2eTestFunc = ({
+export type E2eTestFunc = (opts: {
   createContext: CreateContext,
   onError: TOnError,
 }) => Promise<void>
+
+function replaceInvalidPathChars(_path: string, replaceChar?: string) {
+  return _path.replace(/[\\/:*?"<>|]/g, replaceChar ?? '-')
+}
 
 /** вспомогательная функция для удобного запуска e2e тестов */
 export async function e2eTest(
@@ -56,7 +60,8 @@ export async function e2eTest(
       : 0
   }
 
-  const screenShotsPathTest = screenShotsPath && path.resolve(screenShotsPath, testName)
+  const screenShotsPathTest = screenShotsPath
+    && path.resolve(screenShotsPath, replaceInvalidPathChars(testName))
   if (fse.existsSync(screenShotsPathTest)) {
     await fse.remove(screenShotsPathTest)
   }
@@ -67,7 +72,8 @@ export async function e2eTest(
     return e2eTestPool.run(1, async () => {
       const browserName = browser.browserType().name() + ' ' + browser.version()
       const testNameWithBrowser = `${testName} > ${browserName}`
-      const screenShotsPathTestBrowser = screenShotsPathTest && path.resolve(screenShotsPathTest, browserName)
+      const screenShotsPathTestBrowser = screenShotsPathTest
+        && path.resolve(screenShotsPathTest, replaceInvalidPathChars(browserName))
 
       const contexts: BrowserContext[] = []
       const createContext: CreateContext = async (options) => {

@@ -1,5 +1,5 @@
 import * as idb from 'idb-keyval'
-import { version, files, build, prerendered } from '$service-worker';
+import { version, files, build, prerendered } from '$service-worker'
 
 // docs: https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers
 // docs: https://web.dev/service-worker-lifecycle/
@@ -10,8 +10,8 @@ const STORAGE_PREFIX = 'service-worker-'
 const CACHE_KEY_PREFIX = 'app-'
 const CACHE_KEY = CACHE_KEY_PREFIX + version
 const URLS_VERSIONS: KeyValue<Urls, string> = {
-  main: `main-${version}`,
-	files: `files-1`,
+  main : `main-${version}`,
+  files: `files-1`,
 }
 const URLS: KeyValue<Urls, string[]> = {
   main: [...build, ...prerendered],
@@ -40,37 +40,38 @@ const URLS_ARRAY = Object.values(URLS).flatMap(o => o)
 const URLS_SET = new Set(URLS_ARRAY)
 
 async function sendMessage(message: any, transfer?: Transferable[]) {
-	const windows = await sw.clients.matchAll()
-	windows.forEach(window => {
-		try {
-			window.postMessage(message, transfer)
-		} catch (err) {
-			console.error(err)
-		}
-	})
+  const windows = await sw.clients.matchAll()
+  windows.forEach(window => {
+    try {
+      window.postMessage(message, transfer)
+    }
+    catch (err) {
+      console.error(err)
+    }
+  })
 }
 
 async function logError(error: any) {
-  console.error(error);
-	await sendMessage({
-		type: 'error',
-		error,
-	})
+  console.error(error)
+  await sendMessage({
+    type: 'error',
+    error,
+  })
 }
 
 // endregion
 
 // region events handlers
 
-sw.addEventListener('error', function(event) {
+sw.addEventListener('error', function (event) {
   logError({
     ...event,
     error: event.error && (event.error.stack || event.error + ''),
   })
 })
 
-sw.addEventListener('unhandledrejection', function(event) {
-	let { reason } = event
+sw.addEventListener('unhandledrejection', function (event) {
+  let { reason } = event
   const { detail } = event as any
   if (!reason && detail) {
     reason = detail.reason
@@ -78,12 +79,13 @@ sw.addEventListener('unhandledrejection', function(event) {
 
   if (reason instanceof Error) {
     void logError(reason)
-  } else {
+  }
+  else {
     void logError(
       reason
-				? reason.message || String(reason)
-				: 'unhandled rejection without reason'
-		)
+        ? reason.message || String(reason)
+        : 'unhandled rejection without reason',
+    )
   }
 })
 
@@ -120,19 +122,21 @@ sw.addEventListener('install', (event) => {
             }))
           }
           else {
-            await cache.addAll(urls);
+            await cache.addAll(urls)
           }
         }))
       }
       else {
-        await cache.addAll(URLS_ARRAY);
+        await cache.addAll(URLS_ARRAY)
       }
 
       await idb.set(STORAGE_PREFIX + 'app', {
-        cacheKey: CACHE_KEY,
+        cacheKey    : CACHE_KEY,
         urlsVersions: URLS_VERSIONS,
       } as AppInfo)
-    } catch (err) {
+    }
+    catch (err) {
+      console.log(LOG_PREFIX + 'delete cache: ' + CACHE_KEY)
       await caches.delete(CACHE_KEY)
       throw err
     }
@@ -145,13 +149,16 @@ sw.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     console.log(LOG_PREFIX + 'activating...')
 
-    await clients.claim();
+    await clients.claim()
 
     // delete old caches
     console.log(LOG_PREFIX + 'activating, delete old caches...')
     const cacheKeys = await caches.keys()
     const deleteCacheKeys = cacheKeys.filter(o => o !== CACHE_KEY && o.startsWith(CACHE_KEY_PREFIX))
-    await Promise.all(deleteCacheKeys.map(cacheKey => caches.delete(cacheKey)))
+    await Promise.all(deleteCacheKeys.map(cacheKey => {
+      console.log(LOG_PREFIX + 'delete cache: ' + cacheKey)
+      return caches.delete(cacheKey)
+    }))
 
     console.log(LOG_PREFIX + 'activated')
   })())
