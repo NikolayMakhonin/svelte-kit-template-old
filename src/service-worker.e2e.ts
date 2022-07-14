@@ -2,11 +2,14 @@ import urlJoin from 'url-join'
 import {e2eTest} from 'src/-global/test/e2e/e2eTest'
 import {getBrowsers} from 'src/-global/test/e2e/browser'
 import {createCheckErrorsController} from 'src/-common/test/e2e/createCheckErrorsController'
-import type {BrowserContext, Page} from 'playwright'
+import type {BrowserContext, Page, Worker} from 'playwright'
 import {ChildProcess, spawn, SpawnOptionsWithoutStdio} from 'child_process'
 import type {CheckErrorsController} from 'src/-global/test/e2e/CheckErrorsController'
 import {removeConsoleColor} from 'src/-global/test/helpers/removeConsoleColor'
 import fkill from 'fkill'
+import express from 'express'
+import type {Server} from 'http'
+import {delay} from '@flemist/async-utils'
 
 class Proc {
   readonly command: string
@@ -189,6 +192,29 @@ describe('service-worker', function () {
         previewState = null
       }
 
+      let expressServer: Server
+      async function expressRun() {
+        assert.ok(!expressServer)
+        const app = express()
+        return new Promise<void>((resolve, reject) => {
+          expressServer = app.listen(port, resolve)
+        })
+      }
+
+      async function expressStop() {
+        assert.ok(expressServer)
+        return new Promise<void>((resolve, reject) => {
+          expressServer.close((err) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve()
+          })
+          expressServer = null
+        })
+      }
+
       let context: BrowserContext
       let page: Page
       let prevHtml: string
@@ -197,12 +223,17 @@ describe('service-worker', function () {
         name,
         reload,
         changed,
+        waitNewServiceWorker,
       }: {
         name: string,
         reload?: boolean,
         changed?: boolean,
+        waitNewServiceWorker?: boolean,
       }) {
         console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
+        const serviceworkerPromise = waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
+          context.once('serviceworker', resolve)
+        })
 
         if (!reload) {
           await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
@@ -211,6 +242,8 @@ describe('service-worker', function () {
         else {
           await page.reload({waitUntil: 'networkidle'})
         }
+
+        const serviceworker = await serviceworkerPromise
 
         await checkErrorsController.checkHttpErrors(page)
 
@@ -241,7 +274,7 @@ describe('service-worker', function () {
           assert.strictEqual(context.serviceWorkers().length, 0)
           await checkErrorsController.subscribeJsErrors(page, onError)
 
-          await mainPageTest({name: 'first online'})
+          await mainPageTest({name: 'first online', waitNewServiceWorker: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: 'first online', reload: true})
 
@@ -258,19 +291,19 @@ describe('service-worker', function () {
           await mainPageTest({name: 'rebuild offline', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
 
-          // TODO run empty express with the same port
+          await expressRun()
 
-          await mainPageTest({name: 'rebuild offline'})
+          await mainPageTest({name: 'rebuild 404'})
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'rebuild offline', reload: true})
+          await mainPageTest({name: 'rebuild 404', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
 
-          // TODO stop express
+          await expressStop()
 
           await previewRun()
 
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'rebuild online'})
+          await mainPageTest({name: 'rebuild online', waitNewServiceWorker: true})
           assert.strictEqual(context.serviceWorkers().length, 2)
           await mainPageTest({name: 'rebuild online', changed: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
