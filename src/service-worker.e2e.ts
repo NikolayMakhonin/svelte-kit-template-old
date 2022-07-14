@@ -107,13 +107,9 @@ class Proc {
     if (this.proc.exitCode != null) {
       throw new Error(this.logPrefix + 'Process already killed')
     }
-    // const killPromise = new Promise((resolve) => {
-    //   this.proc.once('exit', resolve)
-    // })
     await fkill(this.proc.pid, {
       force: true,
     })
-    // await killPromise
     assert.ok(this.proc.exitCode)
   }
 }
@@ -261,6 +257,15 @@ describe('service-worker', function () {
           assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: 'rebuild offline', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
+
+          // TODO run empty express with the same port
+
+          await mainPageTest({name: 'rebuild offline'})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: 'rebuild offline', reload: true})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+
+          // TODO stop express
 
           await previewRun()
 
