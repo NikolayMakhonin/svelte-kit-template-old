@@ -323,5 +323,5 @@ describe('service-worker', function () {
     })
 
     console.log('e2e OK')
-  }, 120000)
+  }, 180000)
 })
