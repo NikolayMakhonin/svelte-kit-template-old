@@ -273,41 +273,43 @@ describe('service-worker', function () {
 
         for (let i = 0; i < 3; i++) {
           console.log('iteration: ' + i)
+          const logPrefix = `${i}: `
 
           prevHtml = null
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'first online', reload: true})
+          await mainPageTest({name: logPrefix + 'first online', reload: true})
 
           await previewStop()
 
-          await mainPageTest({name: 'first offline'})
-          await mainPageTest({name: 'first offline', reload: true})
+          await mainPageTest({name: logPrefix + 'first offline'})
+          await mainPageTest({name: logPrefix + 'first offline', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
 
           await build()
 
-          await mainPageTest({name: 'rebuild offline'})
+          await mainPageTest({name: logPrefix + 'rebuild offline'})
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'rebuild offline', reload: true})
+          await mainPageTest({name: logPrefix + 'rebuild offline', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
 
           await expressRun()
 
-          await mainPageTest({name: 'rebuild 404'})
+          await mainPageTest({name: logPrefix + 'rebuild 404'})
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'rebuild 404', reload: true})
+          await mainPageTest({name: logPrefix + 'rebuild 404', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
+          await delay(1000)
 
           await expressStop()
 
           await previewRun()
 
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'rebuild online', waitNewServiceWorker: true})
+          await mainPageTest({name: logPrefix + 'rebuild online', waitNewServiceWorker: true})
           assert.strictEqual(context.serviceWorkers().length, 2)
-          await mainPageTest({name: 'rebuild online', changed: true})
+          await mainPageTest({name: logPrefix + 'rebuild online', changed: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
-          await mainPageTest({name: 'rebuild online', reload: true})
+          await mainPageTest({name: logPrefix + 'rebuild online', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
         }
 
