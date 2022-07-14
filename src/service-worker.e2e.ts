@@ -265,16 +265,16 @@ describe('service-worker', function () {
         await build()
         await previewRun()
 
-        for (let i = 0; i < 1; i++) {
+        context = await createContext()
+        page = await context.newPage()
+        assert.strictEqual(context.serviceWorkers().length, 0)
+        await checkErrorsController.subscribeJsErrors(page, onError)
+        await mainPageTest({name: 'first online', waitNewServiceWorker: true})
+
+        for (let i = 0; i < 3; i++) {
           console.log('iteration: ' + i)
 
           prevHtml = null
-          context = await createContext()
-          page = await context.newPage()
-          assert.strictEqual(context.serviceWorkers().length, 0)
-          await checkErrorsController.subscribeJsErrors(page, onError)
-
-          await mainPageTest({name: 'first online', waitNewServiceWorker: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: 'first online', reload: true})
 
@@ -309,9 +309,9 @@ describe('service-worker', function () {
           assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: 'rebuild online', reload: true})
           assert.strictEqual(context.serviceWorkers().length, 1)
-
-          await context.close()
         }
+
+        await context.close()
 
         await previewStop()
       }
