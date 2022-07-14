@@ -1,12 +1,12 @@
 import urlJoin from 'url-join'
 import {e2eTest} from 'src/-global/test/e2e/e2eTest'
-import {createBrowser, getBrowsers} from 'src/-global/test/e2e/browser'
+import {getBrowsers} from 'src/-global/test/e2e/browser'
 import {createCheckErrorsController} from 'src/-common/test/e2e/createCheckErrorsController'
-import {calcPerformanceAsync} from 'rdtsc'
-import type {Browser, BrowserContext, Page, Worker} from 'playwright'
+import type {BrowserContext, Page} from 'playwright'
 import {ChildProcess, spawn, SpawnOptionsWithoutStdio} from 'child_process'
 import type {CheckErrorsController} from 'src/-global/test/e2e/CheckErrorsController'
 import {removeConsoleColor} from 'src/-global/test/helpers/removeConsoleColor'
+import fkill from 'fkill'
 
 class Proc {
   readonly command: string
@@ -103,13 +103,18 @@ class Proc {
     })
   }
 
-  kill() {
+  async kill() {
     if (this.proc.exitCode != null) {
       throw new Error(this.logPrefix + 'Process already killed')
     }
-    const killPromise = this.wait()
-    this.proc.kill()
-    return killPromise
+    // const killPromise = new Promise((resolve) => {
+    //   this.proc.once('exit', resolve)
+    // })
+    await fkill(this.proc.pid, {
+      force: true,
+    })
+    // await killPromise
+    assert.ok(this.proc.exitCode)
   }
 }
 
@@ -117,70 +122,6 @@ describe('service-worker', function () {
   // this.timeout(300000)
 
   it('install and update', async function () {
-    type PreviewState = {
-      port: number,
-      proc: Proc,
-    }
-
-    async function preview(port?: number): Promise<PreviewState> {
-      const command = 'vite preview' + (port ? ` --port ${port}` : '')
-      const proc = new Proc(command)
-
-      const newPort = await proc.wait<number>(({resolve, reject, data}) => {
-        const port = parseInt(data.match(/http:\/\/localhost:(\d+)/)?.[1] || '0', 10)
-        if (port) {
-          resolve(port)
-        }
-      })
-
-      return {
-        port: newPort,
-        proc,
-      }
-    }
-
-    function build() {
-      const proc = new Proc('vite build')
-      return proc.wait()
-    }
-
-    let port
-    function getHost() {
-      return 'http://localhost:' + port
-    }
-
-    let previewState: PreviewState
-    let checkErrorsController: CheckErrorsController
-
-    async function previewRun() {
-      if (previewState) {
-        throw new Error('preview already run')
-      }
-
-      previewState = await preview(port)
-      if (port) {
-        assert.strictEqual(previewState.port, port)
-      }
-      else {
-        port = previewState.port
-      }
-
-      if (!checkErrorsController) {
-        checkErrorsController = createCheckErrorsController({
-          host: getHost(),
-        })
-      }
-    }
-
-    async function previewStop() {
-      if (!previewState) {
-        throw new Error('preview is not run')
-      }
-
-      await previewState.proc.kill()
-      previewState = null
-    }
-
     const browsers = getBrowsers()
 
     await e2eTest({
@@ -188,29 +129,84 @@ describe('service-worker', function () {
       browsers,
       screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
     }, async ({createContext, onError}) => {
-      await build()
-      await previewRun()
+      type PreviewState = {
+        port: number,
+        proc: Proc,
+      }
 
-      const context = await createContext()
-      const page = await context.newPage()
-      await checkErrorsController.subscribeJsErrors(page, onError)
+      async function preview(port?: number): Promise<PreviewState> {
+        const command = 'vite preview' + (port ? ` --port ${port}` : '')
+        const proc = new Proc(command)
 
+        const newPort = await proc.wait<number>(({resolve, reject, data}) => {
+          const port = parseInt(data.match(/http:\/\/localhost:(\d+)/)?.[1] || '0', 10)
+          if (port) {
+            resolve(port)
+          }
+        })
+
+        return {
+          port: newPort,
+          proc,
+        }
+      }
+
+      function build() {
+        const proc = new Proc('vite build')
+        return proc.wait()
+      }
+
+      let port
+      function getHost() {
+        return 'http://localhost:' + port
+      }
+
+      let previewState: PreviewState
+      let checkErrorsController: CheckErrorsController
+
+      async function previewRun() {
+        if (previewState) {
+          throw new Error('preview already run')
+        }
+
+        previewState = await preview(port)
+        if (port) {
+          assert.strictEqual(previewState.port, port)
+        }
+        else {
+          port = previewState.port
+        }
+
+        if (!checkErrorsController) {
+          checkErrorsController = createCheckErrorsController({
+            host: getHost(),
+          })
+        }
+      }
+
+      async function previewStop() {
+        if (!previewState) {
+          throw new Error('preview is not run')
+        }
+
+        await previewState.proc.kill()
+        previewState = null
+      }
+
+      let context: BrowserContext
+      let page: Page
       let prevHtml: string
+
       async function mainPageTest({
         name,
         reload,
         changed,
-        waitNewServiceWorker,
       }: {
         name: string,
         reload?: boolean,
         changed?: boolean,
-        waitNewServiceWorker?: boolean,
       }) {
         console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
-        const serviceworkerPromise = waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
-          context.once('serviceworker', resolve)
-        })
 
         if (!reload) {
           await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
@@ -219,8 +215,6 @@ describe('service-worker', function () {
         else {
           await page.reload({waitUntil: 'networkidle'})
         }
-
-        const serviceworker = await serviceworkerPromise
 
         await checkErrorsController.checkHttpErrors(page)
 
@@ -238,71 +232,56 @@ describe('service-worker', function () {
         prevHtml = html
       }
 
-      await mainPageTest({name: 'first online'})
-      await mainPageTest({name: 'first online', reload: true})
+      try {
+        await build()
+        await previewRun()
 
-      await previewStop()
+        for (let i = 0; i < 1; i++) {
+          console.log('iteration: ' + i)
 
-      await mainPageTest({name: 'first offline'})
-      await mainPageTest({name: 'first offline', reload: true})
+          prevHtml = null
+          context = await createContext()
+          page = await context.newPage()
+          assert.strictEqual(context.serviceWorkers().length, 0)
+          await checkErrorsController.subscribeJsErrors(page, onError)
 
-      await build()
+          await mainPageTest({name: 'first online'})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: 'first online', reload: true})
 
-      await mainPageTest({name: 'rebuild offline'})
-      await mainPageTest({name: 'rebuild offline', reload: true})
+          await previewStop()
 
-      await previewRun()
+          await mainPageTest({name: 'first offline'})
+          await mainPageTest({name: 'first offline', reload: true})
+          assert.strictEqual(context.serviceWorkers().length, 1)
 
-      await mainPageTest({name: 'rebuild online'})
-      await mainPageTest({name: 'rebuild online', changed: true})
-      await mainPageTest({name: 'rebuild online', reload: true})
+          await build()
 
-      await context.close()
+          await mainPageTest({name: 'rebuild offline'})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: 'rebuild offline', reload: true})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+
+          await previewRun()
+
+          assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: 'rebuild online'})
+          assert.strictEqual(context.serviceWorkers().length, 2)
+          await mainPageTest({name: 'rebuild online', changed: true})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: 'rebuild online', reload: true})
+          assert.strictEqual(context.serviceWorkers().length, 1)
+
+          await context.close()
+        }
+
+        await previewStop()
+      }
+      finally {
+        void previewState?.proc.kill()
+      }
     })
 
     console.log('e2e OK')
   }, 120000)
-
-  it.skip('perf', async function () {
-    let browser: Browser
-    let context: BrowserContext
-    let page: Page
-
-    const result = await calcPerformanceAsync(
-      10000,
-      () => {},
-      async () => {
-        browser = await createBrowser({
-          browserType  : 'chromium',
-          launchOptions: {
-
-          },
-        })
-      },
-      async () => {
-        context = await browser.newContext()
-      },
-      async () => {
-        page = await context.newPage()
-      },
-      async () => {
-        await page.goto('about:blank', {waitUntil: 'networkidle'})
-      },
-      async () => {
-        await page.close()
-      },
-      async () => {
-        await context.close()
-      },
-      async () => {
-        await browser.close()
-      },
-    )
-
-    const totalTime = result.absoluteDiff.reduce((a, o) => a + o, 0)
-    const browserTime = result.absoluteDiff[0] + result.absoluteDiff[result.absoluteDiff.length - 1]
-    const pageTime = totalTime - browserTime
-    console.log('browserTime / pageTime = ' + browserTime / pageTime)
-    console.log(result)
-  }, 60000)
 })
