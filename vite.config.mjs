@@ -3,7 +3,7 @@ import babel from '@rollup/plugin-babel'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // console.log(process.env)
 
@@ -25,8 +25,8 @@ const config = {
   },
   resolve: {
     alias: {
-      src: path.resolve(__dirname, './src'),
-      '~': path.resolve(__dirname),
+      src: path.resolve(dirname, './src'),
+      '~': path.resolve(dirname),
     },
   },
   build: {

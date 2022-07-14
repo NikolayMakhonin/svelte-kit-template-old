@@ -1,6 +1,8 @@
 import * as idb from 'idb-keyval'
 import { version, files, build, prerendered } from '$service-worker'
 
+// console.log({ version, files, build, prerendered })
+
 // docs: https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers
 // docs: https://web.dev/service-worker-lifecycle/
 // docs: https://habr.com/ru/post/535428/
@@ -63,14 +65,14 @@ async function logError(error: any) {
 
 // region events handlers
 
-sw.addEventListener('error', function (event) {
-  logError({
+sw.addEventListener('error', function onError(event) {
+  void logError({
     ...event,
     error: event.error && (event.error.stack || event.error + ''),
   })
 })
 
-sw.addEventListener('unhandledrejection', function (event) {
+sw.addEventListener('unhandledrejection', function onUnhandledRejection(event) {
   let { reason } = event
   const { detail } = event as any
   if (!reason && detail) {
@@ -91,7 +93,7 @@ sw.addEventListener('unhandledrejection', function (event) {
 
 sw.addEventListener('message', (event) => {
   if (event.data?.type === 'skipWaiting') {
-    sw.skipWaiting()
+    void sw.skipWaiting()
   }
 })
 
@@ -149,7 +151,7 @@ sw.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     console.log(LOG_PREFIX + 'activating...')
 
-    await clients.claim()
+    await sw.clients.claim()
 
     // delete old caches
     console.log(LOG_PREFIX + 'activating, delete old caches...')
@@ -168,7 +170,11 @@ sw.addEventListener('fetch', (event) => {
   event.respondWith((async () => {
     const url = new URL(event.request.url)
 
-    let response = await caches.match(url)
+    const cache = await caches.has(CACHE_KEY) && await caches.open(CACHE_KEY) || null
+    // console.log(url)
+    // console.log(url.href)
+    // console.log(await cache.keys())
+    let response = await cache?.match(url)
 
     if (response) {
       console.log(LOG_PREFIX + `fetch from cache ${url}`)

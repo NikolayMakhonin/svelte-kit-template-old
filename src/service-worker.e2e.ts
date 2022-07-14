@@ -1,117 +1,157 @@
 import urlJoin from 'url-join'
-import {e2eTest} from 'src/-global/test/e2e/e2eTest'
-import {getBrowsers, createBrowser} from 'src/-global/test/e2e/browser'
+// import {e2eTest} from 'src/-global/test/e2e/e2eTest'
+import {createBrowser} from 'src/-global/test/e2e/browser'
 import {createCheckErrorsController} from 'src/-common/test/e2e/createCheckErrorsController'
 import {calcPerformanceAsync} from 'rdtsc'
 import type {Browser, BrowserContext, Page, Worker} from 'playwright'
-import {ChildProcess, spawn} from 'child_process'
+import {ChildProcess, spawn, SpawnOptionsWithoutStdio} from 'child_process'
 import type {CheckErrorsController} from 'src/-global/test/e2e/CheckErrorsController'
 import {removeConsoleColor} from 'src/-global/test/helpers/removeConsoleColor'
 
-function exec<T = void>(
-  command,
-  callback?: (
-    proc: ChildProcess,
-    resolve: (value: T) => void,
-    reject: (err: any) => void,
-    stdout: string,
-    exit: boolean,
-  ) => void,
-) {
-  return new Promise<T>((resolve, reject) => {
-    console.log('run: ' + command)
-    function _resolve(value: T) {
-      console.log('completed: ' + command)
-      resolve(value)
-    }
-
-    const proc = spawn(command, {
+class Proc {
+  readonly command: string
+  readonly proc: ChildProcess
+  readonly logPrefix: string
+  constructor(command: string, options?: SpawnOptionsWithoutStdio) {
+    this.proc = spawn(command, {
       shell: true,
       env  : {
         NODE_ENV: 'development',
       },
+      ...options,
     })
-    proc.stdout.on('data', (data: Buffer) => {
-      let text = data.toString('utf8')
-      console.log(text)
-      text = removeConsoleColor(text)
-      // process.stdout.write(data)
-      if (callback) {
-        callback(proc, _resolve, reject, text, false)
-        return
+
+    this.logPrefix = `${command} (${this.proc.pid}): `
+    console.log(this.logPrefix + 'run')
+  }
+
+  wait<T = void>(callback?: (args: {
+    resolve: (value: T) => void,
+    reject: (err: any) => void,
+    data: string,
+  }) => void) {
+    return new Promise<T>((resolve, reject) => {
+      const _this = this
+
+      function unsubscribe() {
+        _this.proc.stdout.off('data', onStdOut)
+        _this.proc.stderr.off('data', onStdErr)
+        _this.proc.off('exit', onExit)
+        _this.proc.off('error', onError)
       }
-    })
-    proc.stderr.on('data', (data: Buffer) => {
-      let text = data.toString('utf8')
-      console.warn(text)
-      text = removeConsoleColor(text)
-      // process.stderr.write(data)
-      if (callback) {
-        callback(proc, _resolve, reject, text, false)
-        return
+
+      function _resolve(value: T) {
+        unsubscribe()
+        console.log(_this.logPrefix + 'resolve')
+        resolve(value)
       }
-    })
-    proc.on('exit', (code) => {
-      if (code) {
-        const message = 'exit code: ' + code
+
+      function _reject(err: any) {
+        unsubscribe()
+        reject(err)
+      }
+
+      function onData(data: Buffer, stderr: boolean) {
+        let text = data.toString('utf8')
+
+        if (stderr) {
+          console.log(_this.logPrefix + text)
+        }
+        else {
+          console.warn(_this.logPrefix + text)
+        }
+
+        text = removeConsoleColor(text)
+
+        if (callback) {
+          callback.call(_this, {resolve: _resolve, reject: _reject, data: text})
+          return
+        }
+      }
+
+      function onStdOut(data: Buffer) {
+        onData(data, false)
+      }
+
+      function onStdErr(data: Buffer) {
+        onData(data, false)
+      }
+
+      function onExit(code: number) {
+        if (code) {
+          const message = _this.logPrefix + `exit code ${code}`
+          console.error(message)
+          reject(new Error(message))
+          assert.fail(message)
+          return
+        }
+        _resolve(void 0)
+        console.log(_this.logPrefix + 'exit')
+      }
+
+      function onError(err: Error) {
+        const message = _this.logPrefix + `error ${err?.stack || err}`
         console.error(message)
-        reject(new Error(message))
+        reject(err)
         assert.fail(message)
-        return
       }
-      _resolve(void 0)
+
+      _this.proc.stdout.on('data', onStdOut)
+      _this.proc.stderr.on('data', onStdErr)
+      _this.proc.on('exit', onExit)
+      _this.proc.on('error', onError)
     })
-    proc.on('error', (err) => {
-      console.error(err)
-      reject(err)
-      assert.fail(err.stack || err.toString())
-    })
-  })
+  }
+
+  kill() {
+    if (this.proc.exitCode != null) {
+      throw new Error(this.logPrefix + 'Process already killed')
+    }
+    const killPromise = this.wait()
+    this.proc.kill()
+    return killPromise
+  }
 }
 
 describe('service-worker', function () {
   // this.timeout(300000)
 
   it('install and update', async function () {
-    const browsers = getBrowsers()
-
-    function preview(port?: number) {
-      const command = 'vite preview' + (port ? ` --port ${port}` : '')
-      return exec<PreviewState>(command, (proc, resolve, reject, stdout) => {
-        const port = parseInt(stdout.match(/http:\/\/localhost:(\d+)/)?.[1] || '0', 10)
-        if (port) {
-          resolve({
-            port,
-            kill: () => {
-              if (proc.exitCode != null) {
-                throw new Error('exit code: ' + proc.exitCode)
-              }
-              return new Promise<void>((resolve, reject) => {
-                proc.on('exit', (code) => {
-                  resolve()
-                })
-                proc.kill()
-              })
-            },
-          })
-        }
-      })
-    }
-
-    function build() {
-      return exec('vite build')
-    }
+    // const browsers = getBrowsers()
 
     type PreviewState = {
       port: number,
-      kill: () => Promise<void>,
+      proc: Proc,
+    }
+
+    async function preview(port?: number): Promise<PreviewState> {
+      const command = 'vite preview' + (port ? ` --port ${port}` : '')
+      const proc = new Proc(command)
+
+      const newPort = await proc.wait<number>(({resolve, reject, data}) => {
+        const port = parseInt(data.match(/http:\/\/localhost:(\d+)/)?.[1] || '0', 10)
+        if (port) {
+          resolve(port)
+        }
+      })
+
+      return {
+        port: newPort,
+        proc,
+      }
+    }
+
+    function build() {
+      const proc = new Proc('vite build')
+      return proc.wait()
+    }
+
+    let port
+    function getHost() {
+      return 'http://localhost:' + port
     }
 
     let previewState: PreviewState
-    function getHost() {
-      return 'http://localhost:' + previewState.port
-    }
-
     let checkErrorsController: CheckErrorsController
 
     async function previewRun() {
@@ -119,10 +159,12 @@ describe('service-worker', function () {
         throw new Error('preview already run')
       }
 
-      const port = previewState?.port
       previewState = await preview(port)
       if (port) {
         assert.strictEqual(previewState.port, port)
+      }
+      else {
+        port = previewState.port
       }
 
       if (!checkErrorsController) {
@@ -137,85 +179,98 @@ describe('service-worker', function () {
         throw new Error('preview is not run')
       }
 
-      await previewState.kill()
+      await previewState.proc.kill()
+      previewState = null
     }
 
-    await e2eTest({
-      testName       : 'service-worker > install and update',
-      browsers,
-      screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
-    }, async ({createContext, onError}) => {
-      await build()
-      await previewRun()
+    // await e2eTest({
+    //   testName       : 'service-worker > install and update',
+    //   browsers,
+    //   screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
+    // }, async ({createContext, onError}) => {
+    await build()
+    await previewRun()
 
-      const context = await createContext()
-      const page = await context.newPage()
-      await checkErrorsController.subscribeJsErrors(page, onError)
+    const browser = await createBrowser({
+      browserType  : 'chromium',
+      launchOptions: {
+        headless: true,
+        // args    : ['--unsafely-treat-insecure-origin-as-secure=' + getHost()],
+        timeout : 60000,
+      },
+    })
 
-      let prevHtml: string
-      async function mainPageTest({
-        name,
-        reload,
-        changed,
-        waitNewServiceWorker,
-      }: {
-        name: string,
-        reload?: boolean,
-        changed?: boolean,
-        waitNewServiceWorker?: boolean,
-      }) {
-        console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
-        const serviceworkerPromise = waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
-          context.once('serviceworker', resolve)
-        })
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await checkErrorsController.subscribeJsErrors(page, (err) => {
+      console.error(err)
+      assert.fail(err + '')
+    })
 
-        if (!reload) {
-          await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
-          // await page.waitForSelector('link')
-        }
-        else {
-          await page.reload({waitUntil: 'networkidle'})
-        }
+    let prevHtml: string
+    async function mainPageTest({
+      name,
+      reload,
+      changed,
+      waitNewServiceWorker,
+    }: {
+      name: string,
+      reload?: boolean,
+      changed?: boolean,
+      waitNewServiceWorker?: boolean,
+    }) {
+      console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
+      const serviceworkerPromise = waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
+        context.once('serviceworker', resolve)
+      })
 
-        const serviceworker = await serviceworkerPromise
-
-        await checkErrorsController.checkHttpErrors(page)
-
-        const html = await page.innerHTML('html')
-        console.log('html: ' + html?.length)
-
-        if (prevHtml) {
-          if (changed) {
-            assert.notStrictEqual(html, prevHtml)
-          }
-          else {
-            assert.strictEqual(html, prevHtml, name)
-          }
-        }
-        prevHtml = html
+      if (!reload) {
+        await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
+        // await page.waitForSelector('link')
+      }
+      else {
+        await page.reload({waitUntil: 'networkidle'})
       }
 
-      await mainPageTest({name: 'first online'})
-      await mainPageTest({name: 'first online', reload: true})
+      const serviceworker = await serviceworkerPromise
 
-      await previewStop()
+      await checkErrorsController.checkHttpErrors(page)
 
-      await mainPageTest({name: 'first offline'})
-      await mainPageTest({name: 'first offline', reload: true})
+      const html = await page.innerHTML('html')
+      console.log('html: ' + html?.length)
 
-      await build()
+      if (prevHtml) {
+        if (changed) {
+          assert.notStrictEqual(html, prevHtml)
+        }
+        else {
+          assert.strictEqual(html, prevHtml, name)
+        }
+      }
+      prevHtml = html
+    }
 
-      await mainPageTest({name: 'rebuild offline'})
-      await mainPageTest({name: 'rebuild offline', reload: true})
+    await mainPageTest({name: 'first online'})
+    await mainPageTest({name: 'first online', reload: true})
 
-      await previewRun()
+    await previewStop()
 
-      await mainPageTest({name: 'rebuild online'})
-      await mainPageTest({name: 'rebuild online', changed: true})
-      await mainPageTest({name: 'rebuild online', reload: true})
+    await mainPageTest({name: 'first offline'})
+    await mainPageTest({name: 'first offline', reload: true})
 
-      await context.close()
-    })
+    await build()
+
+    await mainPageTest({name: 'rebuild offline'})
+    await mainPageTest({name: 'rebuild offline', reload: true})
+
+    await previewRun()
+
+    await mainPageTest({name: 'rebuild online'})
+    await mainPageTest({name: 'rebuild online', changed: true})
+    await mainPageTest({name: 'rebuild online', reload: true})
+
+    await context.close()
+    // })
 
     console.log('e2e OK')
   }, 120000)
