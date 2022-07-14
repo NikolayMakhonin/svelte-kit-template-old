@@ -77,7 +77,7 @@ export async function e2eTest(
       }
 
       const startTime = Date.now()
-      console.log(`Test Start: ${browserName} ${testNameWithBrowser}`)
+      console.log(`Test Start: ${testNameWithBrowser}`)
       try {
         await usingOnError((onError) => {
           return testFunc({

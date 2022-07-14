@@ -7,6 +7,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // console.log(process.env)
 
+const isTest = process.env.NODE_ENV === 'test'
+const isDev = process.env.NODE_ENV === 'development'
+
 /** @type {import('vite').UserConfig} */
 const config = {
   test: {
@@ -26,8 +29,8 @@ const config = {
     },
   },
   build: {
-    minify       : 'terser',
-    terserOptions: {
+    minify       : isTest ? false : 'terser',
+    terserOptions: !isTest && !isDev && {
       module  : true,
       ecma    : 5,
       safari10: true,
@@ -40,7 +43,7 @@ const config = {
   },
   plugins: [
     sveltekit(),
-    {
+    !isTest && {
       name: 'vite-plugin-babel',
       config(config, config_env) {
         return {

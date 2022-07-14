@@ -11,7 +11,7 @@ describe('test1', function () {
     console.log('test1_2: order 4; ' + testNumber)
   })
 
-  xit('test1_x', async function () {
+  it.skip('test1_x', async function () {
     await delay(1000)
     console.log('test1_1: order 2; ' + testNumber)
     await delay(1000)
