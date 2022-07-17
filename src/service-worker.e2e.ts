@@ -134,7 +134,7 @@ describe('service-worker', function () {
       }
 
       async function preview(port?: number): Promise<PreviewState> {
-        const command = 'vite preview' + (port ? ` --port ${port}` : '')
+        const command = '"./node_modules/.bin/vite" preview' + (port ? ` --port ${port}` : '')
         const proc = new Proc(command)
 
         const newPort = await proc.wait<number>(({resolve, reject, data}) => {
@@ -152,7 +152,7 @@ describe('service-worker', function () {
 
       function build() {
         console.log('build')
-        const proc = new Proc('vite build')
+        const proc = new Proc('"./node_modules/.bin/vite" build')
         return proc.wait()
       }
 
