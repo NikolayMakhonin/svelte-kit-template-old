@@ -30,7 +30,7 @@
           url = document.documentURI;
         }
         window.isDebug = /[?&]debug(=true)?(&|$)/.test(url + '');
-        UnhandledErrors.subscribeUnhandledErrors({
+        window.UnhandledErrors.subscribeUnhandledErrors({
           alert             : window.isDebug,
           catchConsoleLevels: window.isDebug && ['error', 'warn'],
           customLog         : function customLog(log) {
@@ -44,6 +44,7 @@
         }
       }
       catch (err) {
+        // eslint-disable-next-line no-alert
         alert(err);
       }
     })();

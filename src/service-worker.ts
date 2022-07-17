@@ -39,8 +39,8 @@ type AppInfo = {
 
 const sw: ServiceWorkerGlobalScope = self as any
 const URLS_ARRAY = Object.values(URLS).flatMap(o => o)
-const URLS_SET = new Set(URLS_ARRAY)
-const ROUTES_SET = new Set(prerendered)
+// const URLS_SET = new Set(URLS_ARRAY)
+// const ROUTES_SET = new Set(prerendered)
 
 async function sendMessage(message: any, transfer?: Transferable[]) {
   const windows = await sw.clients.matchAll()

@@ -1,3 +1,4 @@
+// eslint-disable-next-line node/no-missing-import
 import { sveltekit } from '@sveltejs/kit/vite'
 import babel from '@rollup/plugin-babel'
 import path from 'path'
