@@ -112,7 +112,7 @@ class Proc {
     await fkill(this.proc.pid, {
       force: true,
     })
-    assert.ok(this.proc.exitCode)
+    // assert.ok(this.proc.exitCode)
   }
 }
 

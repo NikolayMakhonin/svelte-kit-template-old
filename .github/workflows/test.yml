@@ -11,13 +11,13 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest]
         node-version: [16.x]
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -27,7 +27,7 @@ jobs:
 #        run: |
 #          node -e "o=['COVERALLS_REPO_TOKEN'].filter(o=>!process.env[o]);o.length&&(console.log('You should set env variables: '+o.join(', ')),process.exit(1))"
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # from: https://github.com/pnpm/action-setup
       - name: Install pnpm
