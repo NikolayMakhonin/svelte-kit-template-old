@@ -104,7 +104,7 @@ export async function e2eTest(
       if (screenShotsPathTestBrowser) {
         log += `\r\nScreenshots: ${screenShotsPathTestBrowser}`
       }
-      log += `\r\n${error}`
+      log += `\r\n${error.stack || error}`
 
       console.error(log)
 
