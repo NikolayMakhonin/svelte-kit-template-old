@@ -67,7 +67,7 @@ export function getBrowsers() {
     e2eState.browsers = createBrowsers({
       browserTypes: process.env.BROWSERS?.trim()
         ? process.env.BROWSERS?.split(',')
-        : ['chromium'],
+        : ['chromium', 'webkit', 'firefox'],
       launchOptions: browserOptions,
     })
   }
