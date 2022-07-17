@@ -7,7 +7,7 @@ import type {CheckErrorsController} from 'src/-global/test/e2e/CheckErrorsContro
 import {removeConsoleColor} from 'src/-global/test/helpers/removeConsoleColor'
 import fkill from 'fkill'
 import express from 'express'
-import type {Server} from 'http'
+// import type {Socket} from 'net'
 import {delay} from '@flemist/async-utils'
 
 class Proc {
@@ -151,6 +151,7 @@ describe('service-worker', function () {
       }
 
       function build() {
+        console.log('build')
         const proc = new Proc('vite build')
         return proc.wait()
       }
@@ -164,6 +165,7 @@ describe('service-worker', function () {
       let checkErrorsController: CheckErrorsController
 
       async function previewRun() {
+        console.log('previewRun')
         if (previewState) {
           throw new Error('preview already run')
         }
@@ -184,6 +186,7 @@ describe('service-worker', function () {
       }
 
       async function previewStop() {
+        console.log('previewStop')
         if (!previewState) {
           throw new Error('preview is not run')
         }
@@ -192,26 +195,41 @@ describe('service-worker', function () {
         previewState = null
       }
 
-      let expressServer: Server
+      let expressStop: () => Promise<void>
       async function expressRun() {
-        assert.ok(!expressServer)
-        const app = express()
-        return new Promise<void>((resolve, reject) => {
-          expressServer = app.listen(port, resolve)
-        })
-      }
-
-      async function expressStop() {
-        assert.ok(expressServer)
-        return new Promise<void>((resolve, reject) => {
-          expressServer.close((err) => {
-            if (err) {
-              reject(err)
-              return
-            }
-            resolve()
+        console.log('expressRun')
+        assert.ok(!expressStop)
+        const app = express().use(function (req, res, next) {
+          res.status(404).send('Test server 404').end(() => {
+            console.log('close connection')
+            req.connection.destroy()
           })
-          expressServer = null
+          next()
+        })
+        await new Promise<void>((resolve, reject) => {
+          const listener = app.listen(port, resolve)
+          // const connections = new Set<Socket>()
+          // listener.on('connection', (connection) => {
+          //   connections.add(connection)
+          //   connection.on('close', () => {
+          //     connections.delete(connection)
+          //   })
+          // })
+          expressStop = () => {
+            console.log('expressStop')
+            expressStop = null
+            // connections.forEach(o => o.destroy())
+            // connections.clear()
+            return new Promise<void>((resolve, reject) => {
+              listener.close((err) => {
+                if (err) {
+                  reject(err)
+                  return
+                }
+                resolve()
+              })
+            })
+          }
         })
       }
 
@@ -315,6 +333,7 @@ describe('service-worker', function () {
           isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: logPrefix + 'rebuild 404', reload: true})
           isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
+          await page.goto('about:blank', {waitUntil: 'networkidle'})
           await delay(1000)
 
           await expressStop()
@@ -340,11 +359,11 @@ describe('service-worker', function () {
     })
   }
 
-  it('install and update > webkit', async function () {
-    await test({browserType: 'webkit'})
+  it('install and update > chromium', async function () {
+    await test({browserType: 'chromium'})
   }, 240000)
 
-  it.skip('install and update > chromium', async function () {
-    await test({browserType: 'chromium'})
+  it('install and update > webkit', async function () {
+    await test({browserType: 'webkit'})
   }, 240000)
 })
