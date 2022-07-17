@@ -40,6 +40,7 @@ type AppInfo = {
 const sw: ServiceWorkerGlobalScope = self as any
 const URLS_ARRAY = Object.values(URLS).flatMap(o => o)
 const URLS_SET = new Set(URLS_ARRAY)
+const ROUTES_SET = new Set(prerendered)
 
 async function sendMessage(message: any, transfer?: Transferable[]) {
   const windows = await sw.clients.matchAll()
@@ -169,6 +170,14 @@ sw.addEventListener('activate', (event) => {
 sw.addEventListener('fetch', (event) => {
   event.respondWith((async () => {
     const url = new URL(event.request.url)
+
+    // webkit apparently takes the service-worker from the cache even though it hasn't been placed there
+    // if (url.pathname === '/service-worker.js') {
+    //   return fetch(event.request)
+    // }
+    // if (ROUTES_SET.has(url.pathname)) {
+    //   void fetch(event.request)
+    // }
 
     const cache = await caches.has(CACHE_KEY) && await caches.open(CACHE_KEY) || null
     // console.log(url)
