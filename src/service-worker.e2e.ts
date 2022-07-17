@@ -118,8 +118,6 @@ class Proc {
 }
 
 describe('service-worker', function () {
-  // this.timeout(300000)
-
   it('install and update', async function () {
     const browsers = getBrowsers()
 
@@ -239,7 +237,6 @@ describe('service-worker', function () {
 
         if (!reload) {
           await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
-          // await page.waitForSelector('link')
         }
         else {
           await page.reload({waitUntil: 'networkidle'})
@@ -300,23 +297,23 @@ describe('service-worker', function () {
 
           await previewStop()
 
-          // await mainPageTest({name: logPrefix + 'first offline'})
-          // await mainPageTest({name: logPrefix + 'first offline', reload: true})
-          // isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: logPrefix + 'first offline'})
+          await mainPageTest({name: logPrefix + 'first offline', reload: true})
+          isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
 
           await build()
 
-          // await mainPageTest({name: logPrefix + 'rebuild offline'})
-          // isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
-          // await mainPageTest({name: logPrefix + 'rebuild offline', reload: true})
-          // isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: logPrefix + 'rebuild offline'})
+          isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: logPrefix + 'rebuild offline', reload: true})
+          isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
 
           await expressRun()
 
-          // await mainPageTest({name: logPrefix + 'rebuild 404'})
-          // isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
-          // await mainPageTest({name: logPrefix + 'rebuild 404', reload: true})
-          // isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: logPrefix + 'rebuild 404'})
+          isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
+          await mainPageTest({name: logPrefix + 'rebuild 404', reload: true})
+          isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
           await delay(1000)
 
           await expressStop()

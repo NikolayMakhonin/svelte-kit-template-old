@@ -17,7 +17,7 @@ export async function subscribeJsErrors({
   await page.exposeFunction(callbackName, (error: string) => {
     let isError: boolean
     try {
-      if (!filter && filter(error)) {
+      if (filter && !filter(error)) {
         return
       }
     }
@@ -35,7 +35,7 @@ export async function subscribeJsErrors({
   })
 
   await page.addInitScript((callbackName) => {
-    function errorToString(err) {
+    function errorToString(err: any): string {
       if (Array.isArray(err)) {
         return err.map(errorToString).join('\r\n\r\n')
       }
@@ -72,10 +72,12 @@ export async function subscribeJsErrors({
   }, callbackName)
 }
 
+type RegExpRule = { value: boolean, pattern: RegExp }
+
 /** фильтр ошибок загрузки ресурсов */
 export type TResourceFilter = {
     /** если url не удовлетворяет регулярному выражению, то ошибка игнорируется */
-    url?: RegExp,
+    url?: RegExpRule[],
 }
 
 /** Запускай эту функцию после полной загрузки страницы и затем снова после всех тестов на этой странице */
@@ -87,12 +89,27 @@ export async function checkHttpErrors({
     filters?: TResourceFilter,
 }) {
   const errors = await page.evaluate((filters?: TResourceFilter) => {
+    function createRegExpFilter(rules: RegExpRule[]) {
+      return function regExpFilter(value: string) {
+        let result = false
+        for (let i = 0, len = rules.length; i < len; i++) {
+          const rule = rules[i]
+          if (rule.pattern.test(value)) {
+            result = rule.value
+          }
+        }
+        return result
+      }
+    }
+
+    const regExpFilter = filters && filters.url && createRegExpFilter(filters.url)
+
     const resources = performance.getEntries && performance.getEntries()
     if (!resources) {
       return null
     }
     return Promise.all(resources.map(resource => {
-      if (filters && filters.url && !filters.url.test(resource.name)) {
+      if (regExpFilter && !regExpFilter(resource.name)) {
         return null
       }
       return fetch(resource.name, {
