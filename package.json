@@ -13,6 +13,7 @@
     "package": "svelte-kit package",
     "preview": "vite preview",
     "prepare": "svelte-kit sync",
+    "audit": "pnpm audit --prod",
     "lint": "eslint ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
     "lint:fix": "eslint --fix ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
     "lint:wizard": "eslint-nibble --cache --multi ./**/*.{js,cjs,mjs,ts,tsx,svelte,html}",
