@@ -6,7 +6,9 @@
       <script value="test:e2e:dev" />
     </scripts>
     <node-interpreter value="project" />
-    <envs />
+    <envs>
+      <env name="BROWSERS" value="webkit" />
+    </envs>
     <method v="2" />
   </configuration>
 </component>
