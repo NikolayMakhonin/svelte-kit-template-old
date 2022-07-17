@@ -1,6 +1,5 @@
 import urlJoin from 'url-join'
 import {e2eTest} from 'src/-global/test/e2e/e2eTest'
-import {getBrowsers} from 'src/-global/test/e2e/browser'
 import {createCheckErrorsController} from 'src/-common/test/e2e/createCheckErrorsController'
 import type {BrowserContext, Page, Worker} from 'playwright'
 import {ChildProcess, spawn, SpawnOptionsWithoutStdio} from 'child_process'
@@ -118,12 +117,10 @@ class Proc {
 }
 
 describe('service-worker', function () {
-  it('install and update', async function () {
-    const browsers = getBrowsers()
-
-    await e2eTest({
+  function test({browserType}: {browserType: string}) {
+    return e2eTest({
       testName       : 'service-worker > install and update',
-      browsers,
+      browserType,
       screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
     }, async ({browser, createContext, onError}) => {
       const browserName = browser.browserType().name()
@@ -341,7 +338,13 @@ describe('service-worker', function () {
         void previewState?.proc.kill()
       }
     })
+  }
 
-    console.log('e2e OK')
+  it('install and update > webkit', async function () {
+    await test({browserType: 'webkit'})
+  }, 240000)
+
+  it.skip('install and update > chromium', async function () {
+    await test({browserType: 'chromium'})
   }, 240000)
 })

@@ -11,8 +11,7 @@ export function waitTimeout({
     abortSignal?: IAbortSignalFast,
 }): Promise<void>|void {
   if (!timeout) {
-    return new Promise(() => {})
-    // throw new Error(`timeout == ${timeout}`)
+    throw new Error(`timeout == ${timeout}`)
   }
   return new Promise((resolve, reject) => {
     if (abortSignal && abortSignal.aborted) {
@@ -61,7 +60,6 @@ export async function waitFor({
         abortSignal,
       }),
       (async () => {
-        // noinspection InfiniteLoopJS
         while (true) {
           if (Date.now() > endTime) {
             throw lastError || new Error(`Timeout (${timeout}): ${description || ''}`)

@@ -1,8 +1,7 @@
-import type {Browser, BrowserContext, BrowserContextOptions, BrowserType} from 'playwright'
+import type {Browser, BrowserContext, BrowserContextOptions, BrowserType, LaunchOptions} from 'playwright'
 import {takeScreenShotFromContexts} from './takeScreenShot'
 import {delay} from '@flemist/async-utils'
-import {browserOptions, Browsers, runInBrowsers} from './browser'
-import {e2eTestPool} from './e2eTestPool'
+import {browserOptions, createBrowser} from './browser'
 import fse from 'fs-extra'
 import {throwIfNotFiniteNumber} from '../throwIfNotFiniteNumber'
 import path from 'path'
@@ -39,12 +38,14 @@ function replaceInvalidPathChars(_path: string, replaceChar?: string) {
 export async function e2eTest(
   {
     testName,
-    browsers,
+    browserType,
+    launchOptions,
     delayOnError,
     screenShotsPath,
   }: {
     testName: string,
-    browsers: Browsers,
+    browserType: string | BrowserType,
+    launchOptions?: LaunchOptions,
     /** если выбрана опция показывать браузер во время теста,
      * то здесь мы можем указать время задержки при ошибке,
      * чтобы можно было посмотреть на браузер и разобраться в чем проблема */
@@ -55,71 +56,80 @@ export async function e2eTest(
   /** в этой функции пиши тесты */
   testFunc: E2eTestFunc,
 ) {
-  if (delayOnError == null) {
-    delayOnError = process.env.DELAY_ON_ERROR
-      ? throwIfNotFiniteNumber(parseInt(process.env.DELAY_ON_ERROR, 10))
-      : 0
-  }
+  let browser: Browser
+  let LOG_PREFIX: string
 
-  const screenShotsPathTest = screenShotsPath
-    && path.resolve(screenShotsPath, replaceInvalidPathChars(testName))
-  if (fse.existsSync(screenShotsPathTest)) {
-    await fse.remove(screenShotsPathTest)
-  }
+  try {
+    if (delayOnError == null) {
+      delayOnError = process.env.DELAY_ON_ERROR
+        ? throwIfNotFiniteNumber(parseInt(process.env.DELAY_ON_ERROR, 10))
+        : 0
+    }
 
-  const browser: Browser = null
+    const screenShotsPathTest = screenShotsPath
+      && path.resolve(screenShotsPath, replaceInvalidPathChars(testName))
+    if (fse.existsSync(screenShotsPathTest)) {
+      await fse.remove(screenShotsPathTest)
+    }
 
-  return runInBrowsers(browsers, (browser) => {
-    return e2eTestPool.run(1, async () => {
-      const browserName = browser.browserType().name() + ' ' + browser.version()
-      const testNameWithBrowser = `${testName} > ${browserName}`
-      const screenShotsPathTestBrowser = screenShotsPathTest
-        && path.resolve(screenShotsPathTest, replaceInvalidPathChars(browserName))
+    browser = await createBrowser({browserType, launchOptions})
 
-      const contexts: BrowserContext[] = []
-      const createContext: CreateContext = async (options) => {
-        const context = await browser.newContext()
-        contexts.push(context)
-        return context
-      }
+    const browserName = browser.browserType().name() + ' ' + browser.version()
+    const testNameWithBrowser = `${testName} > ${browserName}`
+    const screenShotsPathTestBrowser = screenShotsPathTest
+      && path.resolve(screenShotsPathTest, replaceInvalidPathChars(browserName))
+    LOG_PREFIX = `${testNameWithBrowser}: `
 
-      const startTime = Date.now()
-      console.log(`Test Start: ${testNameWithBrowser}`)
-      try {
-        await usingOnError((onError) => {
-          return testFunc({
-            browser,
-            createContext,
-            onError,
-          })
+    const contexts: BrowserContext[] = []
+    const createContext: CreateContext = async (options) => {
+      const context = await browser.newContext()
+      contexts.push(context)
+      return context
+    }
+
+    const startTime = Date.now()
+    console.log(LOG_PREFIX + `Test Start`)
+    try {
+      await usingOnError((onError) => {
+        return testFunc({
+          browser,
+          createContext,
+          onError,
         })
-        console.log(`Test OK (${((Date.now() - startTime) / 1000).toFixed(1)} sec): ${testNameWithBrowser}`)
+      })
+      console.log(LOG_PREFIX + `Test OK (${((Date.now() - startTime) / 1000).toFixed(1)} sec)`)
+    }
+    catch (error) {
+      let log = LOG_PREFIX + `Test Error (${((Date.now() - startTime) / 1000).toFixed(1)} sec)`
+      if (screenShotsPathTestBrowser) {
+        log += `\r\nScreenshots: ${screenShotsPathTestBrowser}`
       }
-      catch (error) {
-        let log = `Test Error (${((Date.now() - startTime) / 1000).toFixed(1)} sec): ${testNameWithBrowser}`
-        if (screenShotsPathTestBrowser) {
-          log += `\r\nScreenshots: ${screenShotsPathTestBrowser}`
-        }
-        log += `\r\n${error}`
+      log += `\r\n${error}`
 
-        console.error(log)
+      console.error(log)
 
-        // делаем скриншот всех окон и вкладок браузера и сохраняем их в папку tmp
-        if (screenShotsPathTestBrowser) {
-          await takeScreenShotFromContexts({
-            contexts,
-            outputPath: screenShotsPathTestBrowser,
-          })
-        }
-
-        // задержка после ошибки и перед закрытием браузера,
-        // чтобы можно было посмотреть на браузер и понять в чем проблема
-        if (delayOnError && browserOptions && !browserOptions.headless) {
-          await delay(delayOnError)
-        }
-
-        throw error
+      // делаем скриншот всех окон и вкладок браузера и сохраняем их в папку tmp
+      if (screenShotsPathTestBrowser) {
+        await takeScreenShotFromContexts({
+          contexts,
+          outputPath: screenShotsPathTestBrowser,
+        })
       }
-    })
-  })
+
+      // задержка после ошибки и перед закрытием браузера,
+      // чтобы можно было посмотреть на браузер и понять в чем проблема
+      if (delayOnError && browserOptions && !browserOptions.headless) {
+        await delay(delayOnError)
+      }
+
+      throw error
+    }
+  }
+  finally {
+    if (browser) {
+      console.log(LOG_PREFIX + `browser closing: ${browser.browserType().name()} ${browser.version()}...`)
+      await browser.close()
+      console.log(LOG_PREFIX + `browser closed: ${browser.browserType().name()} ${browser.version()}`)
+    }
+  }
 }
