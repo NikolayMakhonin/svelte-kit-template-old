@@ -125,7 +125,12 @@ describe('service-worker', function () {
       testName       : 'service-worker > install and update',
       browsers,
       screenShotsPath: 'tmp/test/e2e/service-worker/install-and-update',
-    }, async ({createContext, onError}) => {
+    }, async ({browser, createContext, onError}) => {
+      const browserName = browser.browserType().name()
+      if (browserName === 'firefox') {
+        return
+      }
+
       type PreviewState = {
         port: number,
         proc: Proc,
@@ -265,8 +270,7 @@ describe('service-worker', function () {
         await previewRun()
 
         context = await createContext()
-        isChromium = context.browser().browserType().name() === 'chromium'
-        isWebkit = context.browser().browserType().name() === 'webkit'
+        isChromium = browserName === 'chromium'
         page = await context.newPage()
 
         // disable http cache

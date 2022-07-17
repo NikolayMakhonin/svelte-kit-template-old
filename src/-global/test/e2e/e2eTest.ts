@@ -1,4 +1,4 @@
-import type {Browser, BrowserContext, BrowserContextOptions} from 'playwright'
+import type {Browser, BrowserContext, BrowserContextOptions, BrowserType} from 'playwright'
 import {takeScreenShotFromContexts} from './takeScreenShot'
 import {delay} from '@flemist/async-utils'
 import {browserOptions, Browsers, runInBrowsers} from './browser'
@@ -26,6 +26,7 @@ export async function usingOnError(func: (onError: TOnError) => Promise<void>) {
 export type CreateContext = (options?: BrowserContextOptions) => Promise<BrowserContext>
 
 export type E2eTestFunc = (opts: {
+  browser: Browser,
   createContext: CreateContext,
   onError: TOnError,
 }) => Promise<void>
@@ -87,6 +88,7 @@ export async function e2eTest(
       try {
         await usingOnError((onError) => {
           return testFunc({
+            browser,
             createContext,
             onError,
           })
