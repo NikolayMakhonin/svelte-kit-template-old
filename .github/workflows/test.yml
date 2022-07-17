@@ -46,9 +46,9 @@ jobs:
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ matrix.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            ${{ matrix.os }}-pnpm-store-
 
       - name: Install dependencies
         run: |
@@ -60,10 +60,10 @@ jobs:
           pnpm run audit
           pnpm run lint
 
-      - name: Build
-        shell: bash
-        run: |
-          pnpm run build
+#      - name: Build
+#        shell: bash
+#        run: |
+#          pnpm run build
 
       - name: Mocha tests
         shell: bash
