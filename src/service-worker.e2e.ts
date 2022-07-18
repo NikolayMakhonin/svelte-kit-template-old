@@ -26,7 +26,7 @@ class Proc {
     this.logPrefix = `${command} (${this.proc.pid}): `
     console.log(this.logPrefix + 'run')
 
-    void this.wait()
+    void this.wait().catch(() => {})
   }
 
   wait<T = void>(callback?: (args: {
@@ -86,7 +86,7 @@ class Proc {
           const message = _this.logPrefix + `exit code ${code}`
           console.error(message)
           reject(new Error(message))
-          assert.fail(message)
+          // assert.fail(message)
           return
         }
         _resolve(void 0)
@@ -117,7 +117,7 @@ class Proc {
     try {
       // this.proc.kill('SIGKILL')
       await fkill(this.proc.pid, {
-        force            : false,
+        force            : true,
         forceAfterTimeout: 30000,
         // tree             : true,
       })
