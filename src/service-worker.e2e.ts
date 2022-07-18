@@ -204,10 +204,15 @@ describe('service-worker', function () {
         }
 
         await previewState.proc.kill()
-        await fkill(':' + port, {
-          force: true,
-          tree : true,
-        })
+        try {
+          await fkill(':' + port, {
+            force: true,
+            tree : true,
+          })
+        }
+        catch {
+          // empty
+        }
         previewState = null
       }
 
