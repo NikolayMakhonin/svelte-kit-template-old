@@ -110,6 +110,7 @@ class Proc {
   }
 
   async kill() {
+    assert.ok(this.proc.connected, 'Process is not connected')
     assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
 
     try {
