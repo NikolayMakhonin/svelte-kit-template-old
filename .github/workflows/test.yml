@@ -53,7 +53,7 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          playwright install-deps
+          pnpm run install:playwright
 
       - name: Lint
         shell: bash
