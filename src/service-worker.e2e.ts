@@ -113,11 +113,11 @@ class Proc {
     assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
 
     try {
-      this.proc.kill('SIGKILL')
+      // this.proc.kill('SIGKILL')
       await fkill(this.proc.pid, {
-        force: true,
-        // forceAfterTimeout: 5000,
-        tree : true,
+        force            : false,
+        forceAfterTimeout: 30000,
+        // tree             : true,
       })
     }
     catch (err) {
@@ -213,8 +213,9 @@ describe('service-worker', function () {
         await previewState.proc.kill()
         try {
           await fkill(':' + port, {
-            force: true,
-            tree : true,
+            force            : false,
+            // tree : true,
+            forceAfterTimeout: 30000,
           })
         }
         catch (err) {
