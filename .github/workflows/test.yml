@@ -78,10 +78,10 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install
+        run: playwright install
 
       - name: Install Playwright dependencies
-        run: npx playwright install-deps
+        run: playwright install-deps
 
       # endregion
 
