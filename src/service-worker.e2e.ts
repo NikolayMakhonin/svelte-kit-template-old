@@ -355,16 +355,21 @@ describe('service-worker', function () {
         await previewStop()
       }
       finally {
-        void previewState?.proc.kill()
+        if (expressStop) {
+          await expressStop()
+        }
+        if (previewState) {
+          await previewState.proc.kill()
+        }
       }
     })
   }
 
-  it('install and update > chromium', async function () {
-    await test({browserType: 'chromium'})
-  }, 240000)
-
   it('install and update > webkit', async function () {
     await test({browserType: 'webkit'})
+  }, 240000)
+
+  it('install and update > chromium', async function () {
+    await test({browserType: 'chromium'})
   }, 240000)
 })
