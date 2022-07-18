@@ -105,28 +105,26 @@ class Proc {
     })
   }
 
+  get isAlive() {
+    return this.proc.signalCode == null && this.proc.exitCode == null
+  }
+
   async kill() {
-    if (this.proc.exitCode != null) {
-      throw new Error(this.logPrefix + 'Process already killed')
-    }
-    console.log(JSON.stringify({
-      killed    : this.proc.killed,
-      signalCode: this.proc.signalCode,
-      exitCode  : this.proc.exitCode,
-      connected : this.proc.connected,
-    }, null, 2))
+    assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
+
     await fkill(this.proc.pid, {
       force            : false,
       silent           : true,
       forceAfterTimeout: 5000,
     })
-    console.log(JSON.stringify({
-      killed    : this.proc.killed,
-      signalCode: this.proc.signalCode,
-      exitCode  : this.proc.exitCode,
-      connected : this.proc.connected,
-    }, null, 2))
-    assert.ok(this.proc.exitCode)
+    // console.log(JSON.stringify({
+    //   killed    : this.proc.killed,
+    //   signalCode: this.proc.signalCode,
+    //   exitCode  : this.proc.exitCode,
+    //   connected : this.proc.connected,
+    // }, null, 2))
+
+    assert.ok(!this.isAlive, this.logPrefix + 'Process kill failed')
   }
 }
 

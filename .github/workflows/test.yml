@@ -54,6 +54,11 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
 
+      # from: https://github.com/microsoft/playwright/issues/7249#issuecomment-1154603556
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "::set-output name=version::$(node -e ""console.log(require('playwright/package.json').version)"")"
+
       - name: Install playwright
         run: |
           pnpm run install:playwright
