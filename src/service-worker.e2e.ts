@@ -110,9 +110,10 @@ class Proc {
       throw new Error(this.logPrefix + 'Process already killed')
     }
     await fkill(this.proc.pid, {
-      force: true,
+      force : true,
+      silent: true,
     })
-    // assert.ok(this.proc.exitCode)
+    assert.ok(this.proc.exitCode)
   }
 }
 
