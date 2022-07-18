@@ -69,7 +69,7 @@ jobs:
       - name: Mocha tests
         shell: bash
         run: |
-#          pnpm run test:ci
+          pnpm run test:ci
 
 #      - name: Install chromium dependencies
 #        if: ${{ matrix.node-version == '18.x' }}
