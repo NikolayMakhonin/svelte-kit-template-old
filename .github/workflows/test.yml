@@ -81,7 +81,7 @@ jobs:
         run: playwright install
 
       - name: Install Playwright dependencies
-        run: playwright install-deps
+        run: pnpm run install:playwright-deps
 
       # endregion
 

@@ -21,7 +21,7 @@
     "test:watch": "cross-env HOST=http://localhost:3000 vitest",
     "test:e2e:dev": "cross-env HOST=http://localhost:3000 vitest --ui .e2e.",
     "test:e2e:dev:debug": "cross-env HOST=http://localhost:3000 SHOW_BROWSER=true DELAY_ON_ERROR=600000 vitest --ui .e2e.",
-    "install:playwright": "playwright install --with-deps",
+    "install:playwright-deps": "playwright install-deps",
     "test:ci": "pnpm run test",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch"
