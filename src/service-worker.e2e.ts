@@ -113,9 +113,10 @@ class Proc {
     assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
 
     await fkill(this.proc.pid, {
-      force            : false,
-      silent           : true,
-      forceAfterTimeout: 5000,
+      force : true,
+      silent: true,
+      // forceAfterTimeout: 5000,
+      tree  : true,
     })
     // console.log(JSON.stringify({
     //   killed    : this.proc.killed,
@@ -146,7 +147,7 @@ describe('service-worker', function () {
       }
 
       async function preview(port?: number): Promise<PreviewState> {
-        const command = `"./node_modules/.bin/vite" preview --port ${port || 5173}`
+        const command = '"./node_modules/.bin/vite" preview' + (port ? ` --port ${port}` : '')
         const proc = new Proc(command)
 
         const newPort = await proc.wait<number>(({resolve, reject, data}) => {
