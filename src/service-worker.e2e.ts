@@ -373,7 +373,7 @@ describe('service-worker', function () {
         if (expressStop) {
           await expressStop()
         }
-        if (previewState) {
+        if (previewState?.proc.isAlive) {
           await previewState.proc.kill()
         }
       }
