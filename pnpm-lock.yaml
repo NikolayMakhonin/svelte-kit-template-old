@@ -35,6 +35,7 @@ specifiers:
   fkill: 8.0.1
   fs-extra: 10.1.0
   idb-keyval: 6.2.0
+  playwright: ^1.23.4
   rdtsc: 3.0.3
   rollup: 2.76.0
   svelte: 3.48.0
@@ -87,6 +88,7 @@ devDependencies:
   express: 4.18.1
   fkill: 8.0.1
   fs-extra: 10.1.0
+  playwright: 1.23.4
   rdtsc: 3.0.3
   rollup: 2.76.0
   svelte: 3.48.0
@@ -4688,6 +4690,21 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       execa: 5.1.1
+    dev: true
+
+  /playwright-core/1.23.4:
+    resolution: {integrity: sha512-h5V2yw7d8xIwotjyNrkLF13nV9RiiZLHdXeHo+nVJIYGVlZ8U2qV0pMxNJKNTvfQVT0N8/A4CW6/4EW2cOcTiA==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dev: true
+
+  /playwright/1.23.4:
+    resolution: {integrity: sha512-NUPOLMpd8WydmwZFllST/YZ7cImgDDDrvcaq7Gj2vAjNg0jYCndFJt6HHtbkOPSIlRo4BaQYlbFx6meq1r1FXQ==}
+    engines: {node: '>=14'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      playwright-core: 1.23.4
     dev: true
 
   /please-upgrade-node/3.2.0:

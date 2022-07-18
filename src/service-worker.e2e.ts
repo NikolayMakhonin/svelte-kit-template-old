@@ -113,6 +113,12 @@ class Proc {
       force : true,
       silent: true,
     })
+    console.log(JSON.stringify({
+      killed    : this.proc.killed,
+      signalCode: this.proc.signalCode,
+      exitCode  : this.proc.exitCode,
+      connected : this.proc.connected,
+    }, null, 2))
     assert.ok(this.proc.exitCode)
   }
 }
