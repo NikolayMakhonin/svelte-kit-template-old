@@ -109,6 +109,12 @@ class Proc {
     if (this.proc.exitCode != null) {
       throw new Error(this.logPrefix + 'Process already killed')
     }
+    console.log(JSON.stringify({
+      killed    : this.proc.killed,
+      signalCode: this.proc.signalCode,
+      exitCode  : this.proc.exitCode,
+      connected : this.proc.connected,
+    }, null, 2))
     await fkill(this.proc.pid, {
       force : true,
       silent: true,
