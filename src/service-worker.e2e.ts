@@ -5,10 +5,12 @@ import type {BrowserContext, Page, Worker} from 'playwright'
 import {ChildProcess, spawn, SpawnOptionsWithoutStdio} from 'child_process'
 import type {CheckErrorsController} from 'src/-global/test/e2e/CheckErrorsController'
 import {removeConsoleColor} from 'src/-global/test/helpers/removeConsoleColor'
-import fkill from 'fkill'
+// import fkill from 'fkill'
 import express from 'express'
 // import type {Socket} from 'net'
 import {delay} from '@flemist/async-utils'
+import vite, {PreviewServer} from 'vite'
+import type {Socket, AddressInfo} from 'net'
 
 class Proc {
   readonly command: string
@@ -107,34 +109,34 @@ class Proc {
     })
   }
 
-  get isAlive() {
-    return this.proc.signalCode == null && this.proc.exitCode == null
-  }
-
-  async kill() {
-    assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
-
-    try {
-      // this.proc.kill('SIGKILL')
-      await fkill(this.proc.pid, {
-        force            : true,
-        forceAfterTimeout: 30000,
-        // tree             : true,
-      })
-    }
-    catch (err) {
-      console.warn(err.message)
-    }
-
-    // console.log(JSON.stringify({
-    //   killed    : this.proc.killed,
-    //   signalCode: this.proc.signalCode,
-    //   exitCode  : this.proc.exitCode,
-    //   connected : this.proc.connected,
-    // }, null, 2))
-
-    assert.ok(!this.isAlive, this.logPrefix + 'Process kill failed')
-  }
+  // get isAlive() {
+  //   return this.proc.signalCode == null && this.proc.exitCode == null
+  // }
+  //
+  // async kill() {
+  //   assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
+  //
+  //   try {
+  //     // this.proc.kill('SIGKILL')
+  //     await fkill(this.proc.pid, {
+  //       force            : true,
+  //       forceAfterTimeout: 30000,
+  //       // tree             : true,
+  //     })
+  //   }
+  //   catch (err) {
+  //     console.warn(err.message)
+  //   }
+  //
+  //   // console.log(JSON.stringify({
+  //   //   killed    : this.proc.killed,
+  //   //   signalCode: this.proc.signalCode,
+  //   //   exitCode  : this.proc.exitCode,
+  //   //   connected : this.proc.connected,
+  //   // }, null, 2))
+  //
+  //   assert.ok(!this.isAlive, this.logPrefix + 'Process kill failed')
+  // }
 }
 
 describe('service-worker', function () {
@@ -151,30 +153,57 @@ describe('service-worker', function () {
 
       type PreviewState = {
         port: number,
-        proc: Proc,
+        previewServer: PreviewServer,
+        close: () => Promise<void>,
       }
 
       async function preview(port?: number): Promise<PreviewState> {
-        const command = '"./node_modules/.bin/vite" preview' + (port ? ` --port ${port}` : '')
-        const proc = new Proc(command)
+        const previewServer = await vite.preview({
+          preview: {
+            port,
+            open: false,
+          },
+        })
+        const connections = new Set<Socket>()
 
-        const newPort = await proc.wait<number>(({resolve, reject, data}) => {
-          const port = parseInt(data.match(/http:\/\/localhost:(\d+)/)?.[1] || '0', 10)
-          if (port) {
-            resolve(port)
-          }
+        const previewAddress = previewServer.httpServer.address() as AddressInfo
+        console.log('preview started: ' + `${previewAddress.address}:${previewAddress.port}`)
+        const newPort = previewAddress.port
+        // const newPort = parseInt(previewAddress.match(/:(\d+)\/?$/)?.[1] || '0', 10)
+        assert.ok(newPort)
+
+        previewServer.httpServer.on('connection', (connection) => {
+          connections.add(connection)
+          connection.on('close', () => {
+            connections.delete(connection)
+          })
         })
 
         return {
           port: newPort,
-          proc,
+          previewServer,
+          close() {
+            return new Promise<void>((resolve, reject) => {
+              connections.forEach(connection => {
+                connection.destroy()
+              })
+              previewServer.httpServer.close((err) => {
+                if (err) {
+                  reject(err)
+                  return
+                }
+                resolve()
+              })
+            })
+          },
         }
       }
 
-      function build() {
-        console.log('build')
+      async function build() {
+        console.log('build starting')
         const proc = new Proc('"./node_modules/.bin/vite" build')
-        return proc.wait()
+        await proc.wait()
+        console.log('build completed')
       }
 
       let port
@@ -186,7 +215,8 @@ describe('service-worker', function () {
       let checkErrorsController: CheckErrorsController
 
       async function previewRun() {
-        console.log('previewRun')
+        console.log('preview starting')
+
         if (previewState) {
           throw new Error('preview already run')
         }
@@ -204,32 +234,28 @@ describe('service-worker', function () {
             host: getHost(),
           })
         }
+
+        console.log('preview started')
       }
 
       async function previewStop() {
-        console.log('previewStop')
+        console.log('preview stopping')
+
         if (!previewState) {
           throw new Error('preview is not run')
         }
 
-        await previewState.proc.kill()
-        try {
-          await fkill(':' + port, {
-            force            : false,
-            // tree : true,
-            forceAfterTimeout: 30000,
-          })
-        }
-        catch (err) {
-          console.warn(err.message)
-        }
+        await previewState.close()
 
         previewState = null
+
+        console.log('preview stopped')
       }
 
       let expressStop: () => Promise<void>
       async function expressRun() {
-        console.log('expressRun')
+        console.log('express starting')
+
         assert.ok(!expressStop)
         const app = express().use(function (req, res, next) {
           res.status(404).send('Test server 404').end(() => {
@@ -247,12 +273,13 @@ describe('service-worker', function () {
           //     connections.delete(connection)
           //   })
           // })
-          expressStop = () => {
-            console.log('expressStop')
+          expressStop = async () => {
+            console.log('express stopping')
+
             expressStop = null
             // connections.forEach(o => o.destroy())
             // connections.clear()
-            return new Promise<void>((resolve, reject) => {
+            await new Promise<void>((resolve, reject) => {
               listener.close((err) => {
                 if (err) {
                   reject(err)
@@ -261,8 +288,12 @@ describe('service-worker', function () {
                 resolve()
               })
             })
+
+            console.log('express stopped')
           }
         })
+
+        console.log('express started')
       }
 
       let context: BrowserContext
@@ -389,8 +420,8 @@ describe('service-worker', function () {
         if (expressStop) {
           await expressStop()
         }
-        if (previewState?.proc.isAlive) {
-          await previewState.proc.kill()
+        if (previewState) {
+          await previewState.close()
         }
       }
     })
