@@ -113,10 +113,9 @@ class Proc {
     assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
 
     await fkill(this.proc.pid, {
-      force : true,
-      silent: true,
+      force: true,
       // forceAfterTimeout: 5000,
-      tree  : true,
+      tree : true,
     })
     // console.log(JSON.stringify({
     //   killed    : this.proc.killed,
@@ -205,6 +204,10 @@ describe('service-worker', function () {
         }
 
         await previewState.proc.kill()
+        await fkill(':' + port, {
+          force: true,
+          tree : true,
+        })
         previewState = null
       }
 
