@@ -25,6 +25,8 @@ class Proc {
 
     this.logPrefix = `${command} (${this.proc.pid}): `
     console.log(this.logPrefix + 'run')
+
+    void this.wait()
   }
 
   wait<T = void>(callback?: (args: {
