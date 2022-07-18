@@ -113,6 +113,7 @@ class Proc {
     assert.ok(this.isAlive, this.logPrefix + 'Process already killed')
 
     try {
+      this.proc.kill('SIGKILL')
       await fkill(this.proc.pid, {
         force: true,
         // forceAfterTimeout: 5000,
