@@ -116,8 +116,9 @@ class Proc {
       connected : this.proc.connected,
     }, null, 2))
     await fkill(this.proc.pid, {
-      force : true,
-      silent: true,
+      force            : false,
+      silent           : true,
+      forceAfterTimeout: 5000,
     })
     console.log(JSON.stringify({
       killed    : this.proc.killed,
