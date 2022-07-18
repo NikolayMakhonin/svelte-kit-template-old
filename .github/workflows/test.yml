@@ -11,8 +11,8 @@ jobs:
   test:
     strategy:
       matrix:
-#        os: [ubuntu-latest]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
+#        os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [16.x]
     runs-on: ${{ matrix.os }}
 
@@ -93,10 +93,10 @@ jobs:
 #        run: |
 #          pnpm run build
 
-#      - name: Mocha tests
-#        shell: bash
-#        run: |
-#          pnpm run test:ci
+      - name: Mocha tests
+        shell: bash
+        run: |
+          pnpm run test:ci
 
       # region install chromium
 
