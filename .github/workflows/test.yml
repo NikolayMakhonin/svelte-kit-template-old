@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@v3
         id: playwright-cache
         with:
-          path: ${{ matrix.os == 'Windows' && '%USERPROFILE%/AppData/Local/ms-playwright' || matrix.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
+          path: ${{ matrix.os == 'windows' && '%USERPROFILE%/AppData/Local/ms-playwright' || matrix.os == 'macos' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
           key: '${{ matrix.os }}-playwright-${{ steps.playwright-version.outputs.version }}'
           restore-keys: |
             ${{ matrix.os }}-playwright-
