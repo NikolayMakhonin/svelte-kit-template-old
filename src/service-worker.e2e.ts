@@ -210,7 +210,8 @@ describe('service-worker', function () {
             tree : true,
           })
         }
-        catch {
+        catch (err) {
+          console.warn(err.message)
           // empty
         }
         previewState = null
