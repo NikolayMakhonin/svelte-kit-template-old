@@ -11,6 +11,7 @@ jobs:
   test:
     strategy:
       matrix:
+#        os: [ubuntu-latest]
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [16.x]
     runs-on: ${{ matrix.os }}
@@ -44,8 +45,8 @@ jobs:
         run: |
           echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: ${{ matrix.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -66,10 +67,11 @@ jobs:
         run: |
           echo "::set-output name=version::$(node -e "console.log(require('playwright/package.json').version)")"
 
-      - uses: actions/cache@v3
+      - name: Setup playwright cache
+        uses: actions/cache@v3
         id: playwright-cache
         with:
-          path: ${{ matrix.os == 'Windows' && '%USERPROFILE%\AppData\Local\ms-playwright' || matrix.os == 'MacOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
+          path: ${{ matrix.os == 'Windows' && '%USERPROFILE%/AppData/Local/ms-playwright' || matrix.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
           key: '${{ matrix.os }}-playwright-${{ steps.playwright-version.outputs.version }}'
           restore-keys: |
             ${{ matrix.os }}-playwright-
@@ -91,7 +93,7 @@ jobs:
 #        run: |
 #          pnpm run build
 
-#      - name: Mocha  tests
+#      - name: Mocha tests
 #        shell: bash
 #        run: |
 #          pnpm run test:ci
