@@ -63,12 +63,12 @@ export async function subscribeJsErrors({
     }
 
     // intercept unhandled errors
-    window.addEventListener('error', function (event) {
-      onError('window error: ' + (event.message || JSON.stringify(event)))
-    }, true)
-    window.addEventListener('unhandledrejection', function (event) {
-      onError('window unhandledrejection: ' + errorToString(event.reason))
-    }, true)
+    // window.addEventListener('error', function (event) {
+    //   onError('window error: ' + (event.message || JSON.stringify(event)))
+    // }, true)
+    // window.addEventListener('unhandledrejection', function (event) {
+    //   onError('window unhandledrejection: ' + errorToString(event.reason))
+    // }, true)
   }, callbackName)
 }
 
