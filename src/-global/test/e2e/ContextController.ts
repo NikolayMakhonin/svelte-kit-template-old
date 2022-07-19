@@ -27,7 +27,7 @@ export class ContextController {
 
   readonly _errorPromise = new CustomPromise()
   async waitError() {
-    await this._errorPromise
+    await this._errorPromise.promise
   }
 
   private _error: Error

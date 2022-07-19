@@ -9,62 +9,87 @@
 
   <script src="/lib/unhandled-errors.min.js"></script>
   <script>
-    try {
-      var url = ''
-      if (typeof location != 'undefined' && location.href) {
-        url = document.location.href
-      } else if (document.location && document.location.href) {
-        url = document.location.href
-      } else if (window.location && window.location.href) {
-        url = window.location.href
-      } else if (document.URL) {
-        url = document.URL
-      } else if (document.documentURI) {
-        url = document.documentURI
+    (function initUnhandledErrors() {
+      'use strict';
+
+      try {
+        var url = '';
+        if (typeof location !== 'undefined' && location.href) {
+          url = document.location.href;
+        }
+        else if (document.location && document.location.href) {
+          url = document.location.href;
+        }
+        else if (window.location && window.location.href) {
+          url = window.location.href;
+        }
+        else if (document.URL) {
+          url = document.URL;
+        }
+        else if (document.documentURI) {
+          url = document.documentURI;
+        }
+        window.isDebug = /[?&]debug(=true)?(&|$)/.test(url + '');
+        window.UnhandledErrors.subscribeUnhandledErrors({
+          alert             : window.isDebug,
+          catchConsoleLevels: window.isDebug && ['error', 'warn'],
+          customLog         : function customLog(log) {
+            if (/Test error/.test(log)) {
+              return true;
+            }
+          },
+        });
+        if (window.isDebug) {
+          console.error('Test error');
+        }
       }
-      window.isDebug = /[?&]debug(=true)?(&|$)/.test(url + '')
-      UnhandledErrors.subscribeUnhandledErrors({
-        alert: window.isDebug,
-        catchConsoleLevels: window.isDebug && ['error', 'warn'],
-        customLog: function(log) {
-          if (/Test error/.test(log)) {
-            return true
-          }
-        },
-      })
-      if (window.isDebug) {
-        console.error('Test error')
+      catch (err) {
+        // eslint-disable-next-line no-alert
+        alert(err);
       }
-    } catch (err) {
-      alert(err)
-    }
+    })();
   </script>
 
   <!-- endregion -->
 
   <script>
-		if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      })
+    (function initServiceWorker() {
+      'use strict';
 
-			addEventListener('load', function () {
-				navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
-          if (reg.waiting && reg.waiting.state === 'installed') {
-            reg.waiting.postMessage({ type: 'skipWaiting' })
-          }
-          else {
-            setInterval(function() {
-              reg.update()
-            }, 60 * 60 * 1000)
-          }
-        })
-			})
-		}
-	</script>
+      if ('serviceWorker' in navigator) {
+        console.log('serviceWorker: starting...');
+
+        navigator.serviceWorker.addEventListener('controllerchange', function onControllerChange() {
+          console.log('serviceWorker: controllerchange');
+          window.location.reload();
+        });
+
+        addEventListener('load', function onLoad() {
+          console.log('serviceWorker: registering...');
+          navigator.serviceWorker.register('/service-worker.js').then(function onRegister(reg) {
+            console.log('serviceWorker: registered');
+            console.log('serviceWorker: waiting.state = ' + (reg.waiting && reg.waiting.state));
+            console.log('serviceWorker: installing.state = ' + (reg.installing && reg.installing.state));
+            console.log('serviceWorker: active.state = ' + (reg.active && reg.active.state));
+            if (reg.waiting && reg.waiting.state === 'installed') {
+              console.log('serviceWorker: installed');
+              reg.waiting.postMessage({ type: 'skipWaiting' });
+            }
+            else {
+              setInterval(function onUpdateTimer() {
+                console.log('serviceWorker: update');
+                reg.update();
+              }, 60 * 60 * 1000);
+            }
+            reg.update();
+          });
+        });
+      }
+    })();
+  </script>
 
   <script src="/lib/polyfills/fetch.iife.js"></script>
-  <script src="/lib/polyfills/composedpath.polyfill.js"></script>
+  <script src="/lib/polyfills/composed-path.polyfill.js"></script>
   %sveltekit.head%
 </head>
 <body>

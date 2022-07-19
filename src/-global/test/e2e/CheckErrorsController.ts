@@ -15,14 +15,27 @@ export async function subscribeJsErrors({
   const callbackName = 'callback_191b355ea6f64499a6607ad571da5d4d'
 
   await page.exposeFunction(callbackName, (error: string) => {
-    if (filter && filter(error)) {
-      console.error(error)
+    let isError: boolean
+    try {
+      if (filter && !filter(error)) {
+        return
+      }
+    }
+    catch (err) {
+      error = err
+    }
+
+    try {
+      console.error('BROWSER JS ERROR: ' + error)
       onError(new Error(error))
+    }
+    catch (err) {
+      // empty
     }
   })
 
   await page.addInitScript((callbackName) => {
-    function errorToString(err) {
+    function errorToString(err: any): string {
       if (Array.isArray(err)) {
         return err.map(errorToString).join('\r\n\r\n')
       }
@@ -41,28 +54,30 @@ export async function subscribeJsErrors({
       error: console.error.bind(console),
     }
     console.warn = function warn() {
-      onError(errorToString(Array.from(arguments)))
+      onError('console.warn:' + errorToString(Array.from(arguments)))
       return consoleOrig.warn.apply(this, arguments)
     }
     console.error = function error() {
-      onError(errorToString(Array.from(arguments)))
+      onError('console.error:' + errorToString(Array.from(arguments)))
       return consoleOrig.error.apply(this, arguments)
     }
 
     // intercept unhandled errors
     window.addEventListener('error', function (event) {
-      onError(event.message)
+      onError('window error: ' + (event.message || JSON.stringify(event)))
     }, true)
     window.addEventListener('unhandledrejection', function (event) {
-      onError(errorToString(event.reason))
+      onError('window unhandledrejection: ' + errorToString(event.reason))
     }, true)
   }, callbackName)
 }
 
+type RegExpRule = { value: boolean, pattern: RegExp }
+
 /** фильтр ошибок загрузки ресурсов */
 export type TResourceFilter = {
     /** если url не удовлетворяет регулярному выражению, то ошибка игнорируется */
-    url?: RegExp,
+    url?: RegExpRule[],
 }
 
 /** Запускай эту функцию после полной загрузки страницы и затем снова после всех тестов на этой странице */
@@ -74,12 +89,27 @@ export async function checkHttpErrors({
     filters?: TResourceFilter,
 }) {
   const errors = await page.evaluate((filters?: TResourceFilter) => {
+    function createRegExpFilter(rules: RegExpRule[]) {
+      return function regExpFilter(value: string) {
+        let result = false
+        for (let i = 0, len = rules.length; i < len; i++) {
+          const rule = rules[i]
+          if (rule.pattern.test(value)) {
+            result = rule.value
+          }
+        }
+        return result
+      }
+    }
+
+    const regExpFilter = filters && filters.url && createRegExpFilter(filters.url)
+
     const resources = performance.getEntries && performance.getEntries()
     if (!resources) {
       return null
     }
     return Promise.all(resources.map(resource => {
-      if (filters && filters.url && !filters.url.test(resource.name)) {
+      if (regExpFilter && !regExpFilter(resource.name)) {
         return null
       }
       return fetch(resource.name, {

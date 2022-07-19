@@ -9,8 +9,11 @@
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
       <excludeFolder url="file://$MODULE_DIR$/pnpm-lock.yaml" />
       <excludeFolder url="file://$MODULE_DIR$/.pnpm-debug.log" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/.svelte-kit" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="ts-external-references" level="project" />
   </component>
 </module>
