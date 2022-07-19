@@ -233,6 +233,12 @@ describe('service-worker', function () {
         if (!checkErrorsController) {
           checkErrorsController = createCheckErrorsController({
             host: getHost(),
+            jsErrorsFilter(error) {
+              if (/Failed to fetch dynamically imported module/.test(error)) {
+                return false
+              }
+              return true
+            },
           })
         }
 
