@@ -11,8 +11,8 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [windows-latest]
-#        os: [ubuntu-latest, windows-latest, macos-latest]
+#        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [16.x]
     runs-on: ${{ matrix.os }}
 
@@ -81,6 +81,7 @@ jobs:
         run: pnpm run install:playwright
 
       - name: Install Playwright dependencies
+        if: runner.os == 'Linux'
         run: pnpm run install:playwright-deps
 
       # endregion
