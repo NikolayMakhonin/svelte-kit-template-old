@@ -219,6 +219,12 @@ describe('service-worker', function () {
         // if (/Failed to fetch dynamically imported module/.test(error)) {
         //   return false
         // }
+        if (
+          /\bservice-?worker\b/i.test(error)
+          && /(load failed|Failed to update)/i.test(error)
+        ) {
+          return false
+        }
         if (/\berror\.svelte-/.test(error)) {
           return false
         }
