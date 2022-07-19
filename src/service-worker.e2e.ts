@@ -9,7 +9,8 @@ import {removeConsoleColor} from 'src/-global/test/helpers/removeConsoleColor'
 import express from 'express'
 // import type {Socket} from 'net'
 import {delay} from '@flemist/async-utils'
-import vite, {PreviewServer} from 'vite'
+import * as vite from 'vite'
+import type {PreviewServer} from 'vite'
 import type {Socket, AddressInfo} from 'net'
 
 class Proc {
