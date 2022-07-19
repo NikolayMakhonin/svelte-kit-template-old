@@ -396,7 +396,7 @@ describe('service-worker', function () {
             values.push(await arg.jsonValue())
           }
           console.log('browser console: ', ...values)
-          if (msgType === 'warn' || msgType === 'error') {
+          if (msgType === 'warning' || msgType === 'error') {
             const message = values.join('\r\n')
             if (jsErrorsFilter(message)) {
               console.error('BROWSER JS ERROR: ' + message)
