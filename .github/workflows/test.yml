@@ -45,13 +45,13 @@ jobs:
         run: |
           echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
 
-#      - name: Setup pnpm cache
-#        uses: actions/cache@v3
-#        with:
-#          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
-#          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-#          restore-keys: |
-#            ${{ runner.os }}-pnpm-store-
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       # endregion
 
@@ -67,17 +67,17 @@ jobs:
         run: |
           echo "::set-output name=version::$(node -e "console.log(require('playwright/package.json').version)")"
 
-#      - name: Setup playwright cache
-#        uses: actions/cache@v3
-#        id: playwright-cache
-#        with:
-#          path: ${{ runner.os == 'Windows' && '~\AppData\Local\ms-playwright' || runner.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
-#          key: '${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}'
-#          restore-keys: |
-#            ${{ runner.os }}-playwright-
+      - name: Setup playwright cache
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: ${{ runner.os == 'Windows' && '~\AppData\Local\ms-playwright' || runner.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
+          key: '${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}'
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
-#        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm run install:playwright
 
       - name: Install Playwright dependencies

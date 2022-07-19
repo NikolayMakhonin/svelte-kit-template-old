@@ -315,6 +315,7 @@ describe('service-worker', function () {
         waitNewServiceWorker?: boolean,
       }) {
         console.log(`mainPageTest(name: ${name}, reload: ${reload}, changed: ${changed})`)
+        const waitMainPage = waitNewServiceWorker && page.waitForResponse(urlJoin(getHost(), '/'))
         const serviceworkerPromise = isChromium && waitNewServiceWorker && new Promise<Worker>((resolve, reject) => {
           context.once('serviceworker', resolve)
         })
@@ -327,6 +328,7 @@ describe('service-worker', function () {
         }
 
         const serviceworker = await serviceworkerPromise
+        await waitMainPage
 
         await checkErrorsController.checkHttpErrors(page)
 
