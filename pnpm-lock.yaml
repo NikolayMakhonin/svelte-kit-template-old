@@ -12,7 +12,7 @@ specifiers:
   '@flemist/nosleep.js': 0.12.1
   '@flemist/test-variants': 0.0.16
   '@flemist/time-limits': 0.0.5
-  '@flemist/web-logger': 2.0.0
+  '@flemist/web-logger': 2.0.1
   '@rollup/plugin-babel': 5.3.1
   '@sveltejs/adapter-auto': 1.0.0-next.62
   '@sveltejs/adapter-static': 1.0.0-next.37
@@ -53,7 +53,7 @@ specifiers:
 dependencies:
   '@flemist/abort-controller-fast': 0.0.6
   '@flemist/nosleep.js': 0.12.1
-  '@flemist/web-logger': 2.0.0
+  '@flemist/web-logger': 2.0.1
   firebase: 8.10.1
   firebaseui: 4.8.1_firebase@8.10.1
   idb-keyval: 6.2.0
@@ -1706,8 +1706,8 @@ packages:
       tslib: 2.4.0
     dev: true
 
-  /@flemist/web-logger/2.0.0:
-    resolution: {integrity: sha512-bD1T5bl1QdemBJJVNOXb/nT1/npNyzysnW15Hx6xDFqiTOQULeJV6swW803kAdTgRHn76X2RHqnTJlJSsjGVqw==}
+  /@flemist/web-logger/2.0.1:
+    resolution: {integrity: sha512-pg7WI1IfbtD0tJlxbJwrPThOjr3+27jAu8tgwRjg1TSjNFjwiBfzY9JLYo6L5qVdDTDj/fjUn/QxjzKMrHd5Vg==}
     engines: {node: '>=9.3.0', pnpm: ^7.1.6}
     dependencies:
       needle: 2.6.0

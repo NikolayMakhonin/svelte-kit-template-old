@@ -237,6 +237,9 @@ describe('service-worker', function () {
               if (/Failed to fetch dynamically imported module/.test(error)) {
                 return false
               }
+              // if (/readyState: "complete"/.test(error)) {
+              //   return false
+              // }
               return true
             },
           })
