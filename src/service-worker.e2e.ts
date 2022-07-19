@@ -326,21 +326,32 @@ describe('service-worker', function () {
           context.once('serviceworker', resolve)
         })
 
-        if (!reload) {
-          await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
+        let html: string
+
+        for (let i = 0; i < 2; i++) {
+          if (!reload) {
+            await page.goto(urlJoin(getHost(), '/'), {waitUntil: 'networkidle'})
+          }
+          else {
+            await page.reload({waitUntil: 'networkidle'})
+          }
+
+          const serviceworker = await serviceworkerPromise
+          // await waitMainPage
+
+          await checkErrorsController.checkHttpErrors(page)
+
+          html = await page.innerHTML('html')
+
+          if (prevHtml && changed && html === prevHtml) {
+            console.log('page is not changed, try again')
+            continue
+          }
+
+          break
         }
-        else {
-          await page.reload({waitUntil: 'networkidle'})
-        }
 
-        const serviceworker = await serviceworkerPromise
-        // await waitMainPage
-
-        await checkErrorsController.checkHttpErrors(page)
-
-        const html = await page.innerHTML('html')
         console.log('html: ' + html?.length)
-
         if (prevHtml) {
           if (changed) {
             assert.notStrictEqual(html, prevHtml)
@@ -411,11 +422,9 @@ describe('service-worker', function () {
           await expressStop()
 
           await previewRun()
-          await delay(10000)
 
           isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: logPrefix + 'rebuild online', waitNewServiceWorker: true})
-          await delay(1000)
           isChromium && assert.strictEqual(context.serviceWorkers().length, 2)
           await mainPageTest({name: logPrefix + 'rebuild online', changed: true})
           isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
