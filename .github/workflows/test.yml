@@ -96,10 +96,10 @@ jobs:
 #        run: |
 #          pnpm run build
 
-      - name: Mocha tests
-        shell: bash
-        run: |
-          pnpm run test:ci
+#      - name: Mocha tests
+#        shell: bash
+#        run: |
+#          pnpm run test:ci
 
       # region install chromium
 
