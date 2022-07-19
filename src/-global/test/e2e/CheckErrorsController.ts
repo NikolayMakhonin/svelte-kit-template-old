@@ -54,20 +54,20 @@ export async function subscribeJsErrors({
       error: console.error.bind(console),
     }
     console.warn = function warn() {
-      onError(errorToString(Array.from(arguments)))
+      onError('console.warn:' + errorToString(Array.from(arguments)))
       return consoleOrig.warn.apply(this, arguments)
     }
     console.error = function error() {
-      onError(errorToString(Array.from(arguments)))
+      onError('console.error:' + errorToString(Array.from(arguments)))
       return consoleOrig.error.apply(this, arguments)
     }
 
     // intercept unhandled errors
     window.addEventListener('error', function (event) {
-      onError(event.message)
+      onError('window error: ' + event.message)
     }, true)
     window.addEventListener('unhandledrejection', function (event) {
-      onError(errorToString(event.reason))
+      onError('window unhandledrejection: ' + errorToString(event.reason))
     }, true)
   }, callbackName)
 }
