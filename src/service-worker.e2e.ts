@@ -411,6 +411,7 @@ describe('service-worker', function () {
           await expressStop()
 
           await previewRun()
+          await delay(1000)
 
           isChromium && assert.strictEqual(context.serviceWorkers().length, 1)
           await mainPageTest({name: logPrefix + 'rebuild online', waitNewServiceWorker: true})
