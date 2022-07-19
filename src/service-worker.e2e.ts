@@ -216,6 +216,9 @@ describe('service-worker', function () {
       let checkErrorsController: CheckErrorsController
 
       function jsErrorsFilter(error) {
+        if (/^\s*$/.test(error)) {
+          return false
+        }
         // if (/Failed to fetch dynamically imported module/.test(error)) {
         //   return false
         // }
