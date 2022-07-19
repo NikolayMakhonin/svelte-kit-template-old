@@ -215,6 +215,16 @@ describe('service-worker', function () {
       let previewState: PreviewState
       let checkErrorsController: CheckErrorsController
 
+      function jsErrorsFilter(error) {
+        // if (/Failed to fetch dynamically imported module/.test(error)) {
+        //   return false
+        // }
+        if (/\berror\.svelte-/.test(error)) {
+          return false
+        }
+        return true
+      }
+
       async function previewRun() {
         console.log('preview starting')
 
@@ -233,15 +243,6 @@ describe('service-worker', function () {
         if (!checkErrorsController) {
           checkErrorsController = createCheckErrorsController({
             host: getHost(),
-            jsErrorsFilter(error) {
-              // if (/Failed to fetch dynamically imported module/.test(error)) {
-              //   return false
-              // }
-              if (/\berror\.svelte-/.test(error)) {
-                return false
-              }
-              return true
-            },
           })
         }
 
@@ -382,14 +383,20 @@ describe('service-worker', function () {
         // docs: https://playwright.dev/docs/api/class-page#page-event-console
         page.on('console', async msg => {
           const values = []
+          const msgType = msg.type()
           for (const arg of msg.args()) {
             values.push(await arg.jsonValue())
           }
           console.log('browser console: ', ...values)
+          if (msgType === 'warn' || msgType === 'error') {
+            const message = values.join('\r\n')
+            if (jsErrorsFilter(message)) {
+              onError(new Error(message))
+            }
+          }
         })
 
         assert.strictEqual(context.serviceWorkers().length, 0)
-        await checkErrorsController.subscribeJsErrors(page, onError)
         await mainPageTest({name: 'first online', waitNewServiceWorker: true})
 
         for (let i = 0; i < 5; i++) {
