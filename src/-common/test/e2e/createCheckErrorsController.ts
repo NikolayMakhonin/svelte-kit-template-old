@@ -36,7 +36,7 @@ export function createCheckErrorsController({
       url: [
         { value: true, pattern: new RegExp('^' + host.replace(/\/$/, '').replace(/[\\.]/g, '\\$&') + '(\\/|$)') },
         { value: false, pattern: /\bservice-worker\b/ },
-        ...httpErrorsFilters.url || [],
+        ...httpErrorsFilters?.url || [],
       ],
     },
   })
