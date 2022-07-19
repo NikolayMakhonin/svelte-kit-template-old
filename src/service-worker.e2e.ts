@@ -234,12 +234,12 @@ describe('service-worker', function () {
           checkErrorsController = createCheckErrorsController({
             host: getHost(),
             jsErrorsFilter(error) {
-              if (/Failed to fetch dynamically imported module/.test(error)) {
-                return false
-              }
-              // if (/readyState: "complete"/.test(error)) {
+              // if (/Failed to fetch dynamically imported module/.test(error)) {
               //   return false
               // }
+              if (/\berror\.svelte-/.test(error)) {
+                return false
+              }
               return true
             },
           })
