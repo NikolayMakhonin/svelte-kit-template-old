@@ -26,7 +26,7 @@ export async function subscribeJsErrors({
     }
 
     try {
-      console.error(error)
+      console.error('BROWSER JS ERROR: ' + error)
       onError(new Error(error))
     }
     catch (err) {
