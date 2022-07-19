@@ -336,12 +336,12 @@ describe('service-worker', function () {
             await page.reload({waitUntil: 'networkidle'})
           }
 
+          html = await page.innerHTML('html')
+
           const serviceworker = await serviceworkerPromise
           // await waitMainPage
 
           await checkErrorsController.checkHttpErrors(page)
-
-          html = await page.innerHTML('html')
 
           if (prevHtml && changed && html === prevHtml) {
             console.log('page is not changed, try again')
