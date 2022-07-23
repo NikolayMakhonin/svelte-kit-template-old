@@ -1,7 +1,7 @@
-> 1%
+> 10%
 not IE <= 20
-safari >= 10 # iPhone >= 5
-chrome >= 39 # Android >= 5.1
+safari >= 11 # iPhone >= 6
+chrome >= 51
 UCAndroid >= 12
 op_mob >= 39
 FirefoxAndroid >= 11

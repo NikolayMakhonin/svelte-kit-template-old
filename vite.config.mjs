@@ -10,13 +10,13 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const isTest = process.env.NODE_ENV === 'test'
 const isDev = process.env.NODE_ENV === 'development'
-const isLegacy = false
+const isLegacy = true
 
 /** @type {import('vite').UserConfig} */
 const config = {
   test: {
     threads       : true,
-    // isolate       : false,
+    // isolate       : true,
     maxConcurrency: 4,
     minThreads    : 4,
     maxThreads    : 4,
@@ -31,18 +31,23 @@ const config = {
       '~': path.resolve(dirname),
     },
   },
+  esbuild: {
+    // docs: https://esbuild.github.io/api/#target
+    target: ['es6', 'chrome51', 'safari11'],
+    format: 'esm',
+  },
   build: {
-    minify       : isTest ? false : 'terser',
-    terserOptions: !isTest && !isDev && {
-      module  : true,
-      ecma    : 5,
-      safari10: true,
-      mangle  : false,
-      format  : {
-        comments    : false,
-        max_line_len: 50,
-      },
-    },
+    minify: false,
+    // terserOptions: !isTest && !isDev && {
+    //   module  : true,
+    //   ecma    : 5,
+    //   safari10: true,
+    //   mangle  : false,
+    //   format  : {
+    //     comments    : false,
+    //     max_line_len: 50,
+    //   },
+    // },
   },
   plugins: [
     sveltekit(),
@@ -54,7 +59,7 @@ const config = {
             rollupOptions: {
               plugins: [
                 babel.default({
-                  configFile  : path.resolve(__dirname, '.babelrc.cjs'), // enable babel for node_modules
+                  configFile  : path.resolve(dirname, '.babelrc.cjs'), // enable babel for node_modules
                   extensions  : ['', '.ts', '.js', '.cjs', '.mjs', '.svelte', '.html'],
                   babelHelpers: 'runtime',
                   exclude     : [
