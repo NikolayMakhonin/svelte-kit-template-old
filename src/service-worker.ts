@@ -175,7 +175,7 @@ sw.addEventListener('fetch', (event) => {
     // console.log(url)
     // console.log(url.href)
     // console.log(await cache.keys())
-    let response = await cache?.match(url)
+    let response = await cache?.match(url.href)
 
     if (response) {
       console.log(LOG_PREFIX + `fetch from cache ${CACHE_KEY} ${url}`)
