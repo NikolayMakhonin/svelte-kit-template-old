@@ -62,6 +62,64 @@ async function logError(error: any) {
   })
 }
 
+function getRangeableResponse(request, resp){
+	// Return the response, obeying the range header if given
+	// NOTE: Does not support 'if-range' or multiple ranges!
+	// TODO: Temporary implementation, waiting on official fix:
+	// https://github.com/whatwg/fetch/issues/144
+	// https://github.com/slightlyoff/ServiceWorker/issues/703
+
+	// Validate range value (return whole resp if null or invalid)
+	if (!request) {
+		return resp
+	}
+
+	if (!request.headers.get('range')) {
+		return resp
+	}
+
+	// return createPartialResponse(request, resp)
+
+	let range = /^bytes=(\d*)-(\d*)$/gi.exec(request.headers.get('range'))
+	if (range === null || (range[1] === '' && range[2] === '')) {
+		return resp
+	}
+
+	// Get the body as an array buffer
+	return resp.arrayBuffer().then(function(ab){
+		let total = ab.byteLength
+		let start = parseInt(range[1], 10)
+		let end = parseInt(range[2], 10)
+		// Handle no start value (end is therefore an _offset_ from real end)
+		// NOTE: testing on range var, as start/end Number('') -> 0
+		if (range[1] === ''){
+			start = total - end
+			end = total - 1
+		}
+		// Handle no end value
+		if (range[2] === ''){
+			end = total - 1
+		}
+		const data = ab.slice(
+			Math.max(0, Math.min(start, end + 1, total)),
+			Math.max(0, Math.min(end + 1, total)),
+		)
+		// Add range headers to response's headers
+		let headers = new Headers()
+		for (let [k, v] of resp.headers) {
+			headers.set(k, v)
+		}
+		headers.set('Content-Range', `bytes ${start}-${end}/${total}`)
+		headers.set('Content-Length', data.byteLength.toString())
+		// Return ranged response
+		return new Response(data, {
+			'status': 206,
+			'statusText': 'Partial Content',
+			'headers': headers,
+		})
+	})
+}
+
 // endregion
 
 // region events handlers
@@ -182,8 +240,13 @@ sw.addEventListener('fetch', (event) => {
     }
     else {
       response = await fetch(event.request)
+      if (response.ok) {
+        await cache.put(event.request, response.clone()) // for sapper only, see this issue: https://github.com/sveltejs/sapper/issues/625\
+      }
       console.log(LOG_PREFIX + `fetch load ${url}`)
     }
+
+    response = await getRangeableResponse(event.request, response)
 
     return response
   })())
