@@ -219,18 +219,22 @@ describe('service-worker', function () {
         if (/^\s*$/.test(error)) {
           return false
         }
+
         // if (/Failed to fetch dynamically imported module/.test(error)) {
         //   return false
         // }
+
         if (
           /\bservice-?worker\b/i.test(error)
           && /(load failed|Failed to update)/i.test(error)
         ) {
           return false
         }
-        if (/\berror\.svelte-/.test(error)) {
-          return false
-        }
+
+        // only for windows CI:
+        // if (/\berror\.svelte-/.test(error)) {
+        //   return false
+        // }
         return true
       }
 
